@@ -18,15 +18,14 @@ import {
   X,
   Check,
   LogOut,
-  Menu,
   WifiOff,
-  ArrowUpRight,
   ShieldCheck,
   Sun,
-  Filter,
+  Sparkles,
 } from "lucide-react";
 import { dateKey, parseDay, fee, period, conflicts, shareText } from "./domain";
 import "./style.css";
+import "./identity.css";
 import Community from "./community";
 import { roles, roleKeys, roleLabel, canOrganize } from "./roles";
 const configured = !!(
@@ -496,7 +495,14 @@ function App() {
       <div className="shell">
         <header>
           <div className="header-title">
-            Agenda da comunidade <span>/ {tab}</span>
+            <span className="header-emblem">
+              <Church size={23} strokeWidth={1.6} />
+            </span>
+            <div>
+              <b>Nossa Senhora Aparecida</b>
+              <small>BAIRRO UNIÃO · PALOTINA</small>
+            </div>
+            <span className="header-section">{tab}</span>
           </div>
           <div className="header-actions">
             <span className={"connection " + (!online ? "offline" : "")}>
@@ -614,12 +620,102 @@ function App() {
                       </div>
                     </div>
                     <div className="reflection-art" aria-hidden="true">
-                      <div className="halo" />
-                      <div className="cross" />
-                      <div className="hill h1" />
-                      <div className="hill h2" />
-                      <div className="hill h3" />
-                      <span>Que a fé ilumine seus caminhos.</span>
+                      <svg
+                        className="marian-art"
+                        viewBox="0 0 260 300"
+                        fill="none"
+                      >
+                        <defs>
+                          <linearGradient
+                            id="mantle"
+                            x1="65"
+                            y1="100"
+                            x2="205"
+                            y2="285"
+                            gradientUnits="userSpaceOnUse"
+                          >
+                            <stop stopColor="#6196e0" stopOpacity=".5" />
+                            <stop
+                              offset="1"
+                              stopColor="#143d83"
+                              stopOpacity=".15"
+                            />
+                          </linearGradient>
+                          <linearGradient id="gold-stroke">
+                            <stop stopColor="#f6e4ae" />
+                            <stop offset="1" stopColor="#c29a4d" />
+                          </linearGradient>
+                        </defs>
+                        <path
+                          d="M35 270V119a95 95 0 0 1 190 0v151"
+                          stroke="#c7a15a"
+                          strokeOpacity=".24"
+                        />
+                        <path
+                          d="M48 270V120a82 82 0 0 1 164 0v150"
+                          stroke="#c7a15a"
+                          strokeOpacity=".12"
+                        />
+                        <circle
+                          cx="130"
+                          cy="114"
+                          r="51"
+                          stroke="#f1d791"
+                          strokeOpacity=".23"
+                        />
+                        <circle
+                          cx="130"
+                          cy="114"
+                          r="42"
+                          stroke="#f1d791"
+                          strokeOpacity=".12"
+                        />
+                        <path
+                          d="M109 85l-8-25 20 10 9-21 10 21 20-10-9 25z"
+                          fill="url(#gold-stroke)"
+                        />
+                        <path
+                          d="M109 92c-10 15-15 35-21 54L55 260q75 24 150 0l-33-114c-6-19-11-39-21-54"
+                          fill="url(#mantle)"
+                          stroke="url(#gold-stroke)"
+                          strokeWidth="1.7"
+                        />
+                        <path
+                          d="M114 96c4-8 28-8 32 0l-2 21c-2 14-24 14-27 0z"
+                          fill="#d9bf88"
+                          fillOpacity=".88"
+                        />
+                        <path
+                          d="M130 139l-12 18 12 23 12-23-12-18zm0 41v70m-12-93L88 248m54-91 30 91"
+                          stroke="#edd59a"
+                          strokeOpacity=".65"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                        {[
+                          [-56, 39],
+                          [-35, 20],
+                          [0, 13],
+                          [35, 20],
+                          [56, 39],
+                        ].map(([x, y], i) => (
+                          <path
+                            key={i}
+                            d={`M${130 + x} ${y}v7m-3.5-3.5h7`}
+                            stroke="#ead296"
+                            strokeWidth="1.4"
+                            strokeLinecap="round"
+                          />
+                        ))}
+                        <path
+                          d="M67 273q63 18 126 0"
+                          stroke="#e4c47e"
+                          strokeOpacity=".45"
+                        />
+                      </svg>
+                      <span>
+                        <Sparkles size={12} /> Sob o manto do amor.
+                      </span>
                     </div>
                   </section>
                   <div className="stats">

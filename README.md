@@ -12,7 +12,7 @@ O backend deste app está em `supabase/`, separado dos outros projetos. A migra�
 
 ### Implementado
 
-- Layout próprio em CSS, navegação para celular e visualizações da agenda por dia, semana e mês.
+- Identidade mariana em azul, branco e dourado, tipografias Inter e Plus Jakarta Sans, ícones Lucide, ilustração vetorial de Nossa Senhora, navegação flutuante para celular e animações que respeitam a preferência de movimento reduzido. Layout próprio em CSS e visualizações da agenda por dia, semana e mês.
 - Reservas: casamento, palestra, retiro, celebração, missa, culto da Palavra, promoção, evento e encontro.
 - Criação/edição/cancelamento, autor e data do registro, taxas calculadas também no banco e bloqueio transacional de sobreposição de horários.
 - Casamento: R$ 150 para contribuintes do dízimo da comunidade; R$ 350 para não contribuintes.

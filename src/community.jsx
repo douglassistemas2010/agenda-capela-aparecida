@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Settings,
   Share2,
+  X,
 } from "lucide-react";
 import QRCode from "qrcode";
 import { pixPayload } from "./pix";
@@ -767,8 +768,12 @@ export default function Community({
             aria-label="Novo registro"
             onClick={(e) => e.stopPropagation()}
           >
-            <button className="close icon-btn" onClick={() => setForm(null)}>
-              ✕
+            <button
+              className="close icon-btn"
+              aria-label="Fechar"
+              onClick={() => setForm(null)}
+            >
+              <X size={20} />
             </button>
             <h2>
               {form === "person"
