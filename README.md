@@ -2,6 +2,8 @@
 
 App online da Capela Nossa Senhora Aparecida, Bairro União, Palotina. Desenvolvimento: **Douglas Araujo Gomes**.
 
+[Abrir o app](https://douglassistemas2010.github.io/agenda-capela-aparecida/) · [Repositório](https://github.com/douglassistemas2010/agenda-capela-aparecida)
+
 ## Estado desta entrega
 
 Interface implementada e publicável no GitHub Pages. Sem configuração Supabase, abre uma **demonstração explicitamente identificada**, com dados ilustrativos e gravação desabilitada. Nenhum dado de reserva ou contribuição é salvo no navegador.
