@@ -1,0 +1,64 @@
+-- Execute uma vez no SQL Editor de um novo projeto Supabase.
+create extension if not exists btree_gist;
+create table public.profiles(id uuid primary key references auth.users on delete cascade,name text not null default '',email text,role text not null default 'consulta' check(role in ('consulta','secretaria','tesouraria','admin')),approved boolean not null default false,created_at timestamptz not null default now());
+create function public.handle_new_user() returns trigger language plpgsql security definer set search_path=public as $$ begin insert into public.profiles(id,name,email) values(new.id,coalesce(new.raw_user_meta_data->>'full_name',new.raw_user_meta_data->>'name','Novo membro'),new.email);return new;end $$;
+create trigger new_user after insert on auth.users for each row execute function public.handle_new_user();
+create function public.has_role(roles text[]) returns boolean language sql stable security definer set search_path=public as $$ select exists(select 1 from profiles where id=auth.uid() and approved and role=any(roles)) $$;
+create function public.is_member() returns boolean language sql stable security definer set search_path=public as $$ select public.has_role(array['consulta','secretaria','tesouraria','admin']) $$;
+alter table public.profiles enable row level security;
+create policy profile_read on public.profiles for select to authenticated using(id=auth.uid() or public.has_role(array['admin']));
+create function public.manage_member(member_id uuid,new_role text,new_approved boolean) returns void language plpgsql security definer set search_path=public as $$ begin
+ if not public.has_role(array['admin']) then raise exception 'Acesso negado';end if;
+ if member_id=auth.uid() then raise exception 'Seu próprio acesso é protegido';end if;
+ update profiles set role=new_role,approved=new_approved where id=member_id;
+end $$;
+revoke all on function public.manage_member(uuid,text,boolean) from public;
+grant execute on function public.manage_member(uuid,text,boolean) to authenticated;
+create table public.events(id uuid primary key default gen_random_uuid(),title text not null check(length(title) between 1 and 150),type text not null check(type in ('Casamento','Palestra','Retiro','Celebração','Missa','Culto da Palavra','Promoção','Evento','Encontro')),date date not null,start_time time not null,end_time time not null check(end_time>start_time),status text not null default 'Confirmado' check(status in ('Confirmado','Pendente','Cancelado')),contributor boolean not null default false,amount numeric(10,2) not null default 0,contact text check(length(contact)<=150),notes text check(length(notes)<=2000),created_by uuid not null references profiles(id) default auth.uid(),creator_name text not null default '',created_at timestamptz not null default now(),updated_at timestamptz not null default now(),updated_by uuid references profiles(id),exclude using gist(tsrange(date+start_time,date+end_time,'[)') with &&) where(status<>'Cancelado'));
+create function public.stamp_event() returns trigger language plpgsql security definer set search_path=public as $$ begin
+ if tg_op='INSERT' then new.created_by:=auth.uid();new.created_at:=now();select name into new.creator_name from profiles where id=auth.uid();else new.created_by:=old.created_by;new.created_at:=old.created_at;new.creator_name:=old.creator_name;end if;
+ new.amount:=case when new.type='Casamento' then case when new.contributor then 150 else 350 end else 0 end;new.updated_at:=now();new.updated_by:=auth.uid();return new;
+end $$;
+create trigger stamp_event before insert or update on public.events for each row execute function public.stamp_event();
+alter table public.events enable row level security;
+create policy events_read on public.events for select to authenticated using(public.is_member());
+create policy events_insert on public.events for insert to authenticated with check(public.has_role(array['admin','secretaria']));
+create policy events_update on public.events for update to authenticated using(public.has_role(array['admin','secretaria'])) with check(public.has_role(array['admin','secretaria']));
+create table public.parishioners(id uuid primary key default gen_random_uuid(),name text not null check(length(name) between 1 and 150),email text,phone text,birthday date check(birthday<=current_date),notes text,active boolean not null default true,created_by uuid not null references profiles(id) default auth.uid(),created_at timestamptz not null default now());
+alter table public.parishioners enable row level security;
+create policy parishioners_read on public.parishioners for select to authenticated using(public.has_role(array['admin','tesouraria']));
+create policy parishioners_insert on public.parishioners for insert to authenticated with check(public.has_role(array['admin','tesouraria']) and created_by=auth.uid());
+create policy parishioners_update on public.parishioners for update to authenticated using(public.has_role(array['admin','tesouraria'])) with check(public.has_role(array['admin','tesouraria']));
+create table public.contributions(id uuid primary key default gen_random_uuid(),kind text not null check(kind in ('Dízimo','Oferta')),amount numeric(10,2) not null check(amount>0),paid_on date not null check(paid_on<=current_date),competence text not null check(competence ~ '^\d{4}-(0[1-9]|1[0-2])$'),parishioner_id uuid references parishioners(id),user_id uuid not null references profiles(id) default auth.uid(),proof_path text,status text not null default 'Pendente' check(status in ('Pendente','Confirmado')),confirmed_by uuid references profiles(id),confirmed_at timestamptz,created_at timestamptz not null default now());
+alter table public.contributions enable row level security;
+create policy contributions_read on public.contributions for select to authenticated using(public.is_member() and (user_id=auth.uid() or public.has_role(array['admin','tesouraria'])));
+create policy contributions_insert on public.contributions for insert to authenticated with check(public.is_member() and user_id=auth.uid() and status='Pendente' and confirmed_by is null and confirmed_at is null and (parishioner_id is null or public.has_role(array['admin','tesouraria'])) and (proof_path is null or proof_path like auth.uid()::text||'/%'));
+create policy contributions_update on public.contributions for update to authenticated using(public.has_role(array['admin','tesouraria'])) with check(public.has_role(array['admin','tesouraria']));
+create function public.confirm_contribution() returns trigger language plpgsql security definer set search_path=public as $$ begin
+ new.user_id:=old.user_id;new.created_at:=old.created_at;
+ if new.status='Confirmado' then new.confirmed_by:=auth.uid();new.confirmed_at:=now();else new.confirmed_by:=null;new.confirmed_at:=null;end if;return new;
+end $$;
+create trigger confirm_contribution before update on public.contributions for each row execute function public.confirm_contribution();
+create table public.announcements(id uuid primary key default gen_random_uuid(),title text not null check(length(title) between 1 and 150),body text not null check(length(body)<=5000),category text not null default 'Comunicado',created_by uuid not null references profiles(id) default auth.uid(),created_at timestamptz not null default now());
+alter table public.announcements enable row level security;
+create policy announcements_read on public.announcements for select to authenticated using(public.is_member());
+create policy announcements_insert on public.announcements for insert to authenticated with check(public.has_role(array['admin','secretaria']) and created_by=auth.uid());
+create table public.community_settings(id int primary key check(id=1),pix_key text check(length(pix_key)<=77),pix_name text check(length(pix_name)<=25),pix_city text check(length(pix_city)<=15));
+alter table public.community_settings enable row level security;
+create policy settings_read on public.community_settings for select to authenticated using(public.is_member());
+create policy settings_insert on public.community_settings for insert to authenticated with check(public.has_role(array['admin']));
+create policy settings_update on public.community_settings for update to authenticated using(public.has_role(array['admin'])) with check(public.has_role(array['admin']));
+create table public.push_subscriptions(id uuid primary key default gen_random_uuid(),user_id uuid not null references profiles(id) on delete cascade,endpoint text unique not null,subscription jsonb not null,created_at timestamptz not null default now());
+alter table public.push_subscriptions enable row level security;
+create policy push_own on public.push_subscriptions for all to authenticated using(user_id=auth.uid() and public.is_member()) with check(user_id=auth.uid() and public.is_member());
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('receipts','receipts',false,10485760,array['image/jpeg','image/png','application/pdf']);
+create policy receipts_insert on storage.objects for insert to authenticated with check(bucket_id='receipts' and (storage.foldername(name))[1]=auth.uid()::text and public.is_member());
+create policy receipts_read on storage.objects for select to authenticated using(bucket_id='receipts' and public.is_member() and ((storage.foldername(name))[1]=auth.uid()::text or public.has_role(array['admin','tesouraria'])));
+create policy receipts_delete_own on storage.objects for delete to authenticated using(bucket_id='receipts' and (storage.foldername(name))[1]=auth.uid()::text and public.is_member() and not exists(select 1 from public.contributions where proof_path=name));
+grant select on public.profiles to authenticated;
+grant select,insert,update on public.events,public.parishioners,public.contributions,public.community_settings to authenticated;
+grant select,insert on public.announcements to authenticated;
+grant select,insert,update,delete on public.push_subscriptions to authenticated;
+revoke all on public.profiles,public.events,public.parishioners,public.contributions,public.announcements,public.community_settings,public.push_subscriptions from anon;
+-- Depois de cadastrar e confirmar o e-mail do proprietário, promova SOMENTE pelo SQL Editor:
+-- update public.profiles set role='admin', approved=true where email='douglas_sistemas2010@hotmail.com';

@@ -1,0 +1,20 @@
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, cpSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+const root = resolve(import.meta.dirname, '..');
+const dist = join(root, 'dist');
+if (!existsSync(join(dist, 'index.html'))) throw Error('Execute npm run build primeiro.');
+const run = (args, cwd) => execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+const remote = run(['remote', 'get-url', 'origin'], root);
+const checkout = mkdtempSync(join(tmpdir(), 'capela-pages-'));
+const exists = run(['ls-remote', '--heads', remote, 'gh-pages'], root);
+if (exists) run(['clone', '--branch', 'gh-pages', '--single-branch', remote, checkout], root);
+else {run(['init', '-b', 'gh-pages'], checkout);run(['remote', 'add', 'origin', remote], checkout);}
+run(['config', 'user.name', 'Douglas Araujo Gomes'], checkout);
+run(['config', 'user.email', 'douglas_sistemas2010@hotmail.com'], checkout);
+cpSync(dist, checkout, { recursive: true });
+run(['add', '.'], checkout);
+if (run(['status', '--porcelain'], checkout)) run(['commit', '-m', 'Publica versão compilada da agenda da capela'], checkout);
+console.log(run(['push', 'origin', 'gh-pages'], checkout));
+console.log('GitHub Pages: versão compilada enviada.');
