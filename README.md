@@ -31,7 +31,7 @@ O backend deste app está em `supabase/`, separado dos outros projetos. A migra�
 3. Em Authentication > URL Configuration, definir a URL do GitHub Pages como Site URL e redirect permitido.
 4. Configurar envio de e-mails/SMTP, confirmação de e-mail e limites do Auth no Supabase.
 5. Copiar `.env.example` para `.env` local e preencher a URL e a chave **pública** anon/publishable. Nunca colocar senha de banco, service_role ou segredos OAuth em variáveis VITE.
-6. No GitHub, em Settings > Secrets and variables > Actions > Variables, cadastrar `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`, e executar novamente a publicação.
+6. Para publicação direta, configurar essas variáveis no `.env` local e compilar. Ao ativar GitHub Actions futuramente, cadastrar `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` em Settings > Secrets and variables > Actions > Variables.
 7. Cadastrar e confirmar o e-mail do proprietário. Promovê-lo via SQL Editor usando o comando comentado ao final da migração. Os demais usuários serão aprovados pela tela Pessoas.
 8. Habilitar Google e Apple no Supabase e configurar os apps/redirects nos respectivos consoles. A configuração Apple exige credenciais e manutenção do segredo do provedor.
 
@@ -67,7 +67,7 @@ npm test
 npm run build
 ```
 
-GitHub Actions faz testes, build e publicação. A rotina de deploy usa as variáveis públicas do repositório. O banco e o serviço de push são serviços separados do GitHub Pages.
+A publicação atual usa a branch `gh-pages`, com o app compilado. Para atualizar: `npm test`, `npm run build` e `node scripts/deploy-pages.mjs`. O modelo `templates/github-pages.yml.example` permite ativar GitHub Actions futuramente, quando a autorização GitHub incluir o escopo `workflow`; mova-o para `.github/workflows/pages.yml`. O banco e o serviço de push são serviços separados do GitHub Pages.
 
 ## Verificação
 

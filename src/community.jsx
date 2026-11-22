@@ -568,8 +568,8 @@ export default function Community({
                 <ShieldCheck />
                 <h3>Pix em preparação</h3>
                 <p>
-                  A chave oficial da comunidade será definida. O QR Code será
-                  exibido após a configuração pela administração.
+                  Chave informada: uniao.mitra@hotmail.com. Cidade: Palotina.
+                  O QR Code será liberado após confirmar o nome do beneficiário.
                 </p>
               </div>
             )}
