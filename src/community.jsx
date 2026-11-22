@@ -17,6 +17,7 @@ import {
 import QRCode from "qrcode";
 import { pixPayload } from "./pix";
 import { dateKey } from "./domain";
+import { canOrganize, canManageContributions, canConfirm } from "./roles";
 const money = (n) =>
   Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const monthNow = dateKey(new Date()).slice(0, 7);
@@ -43,8 +44,9 @@ export default function Community({
     [amount, setAmount] = useState(""),
     [file, setFile] = useState(null),
     [personId, setPersonId] = useState("");
-  const finance = demo || ["admin", "tesouraria"].includes(profile?.role),
-    staff = demo || ["admin", "secretaria"].includes(profile?.role),
+  const finance = demo || canManageContributions(profile?.role),
+    staff = demo || canOrganize(profile?.role),
+    confirmPayments = demo || canConfirm(profile?.role),
     admin = profile?.role === "admin";
   async function load() {
     if (!db) return;
@@ -145,36 +147,30 @@ export default function Community({
     let result;
     try {
       if (form === "person") {
-        result = await db
-          .from("parishioners")
-          .insert({
-            name: f.get("name"),
-            email: f.get("email"),
-            phone: f.get("phone"),
-            birthday: f.get("birthday") || null,
-            notes: f.get("notes"),
-            created_by: session.user.id,
-          });
+        result = await db.from("parishioners").insert({
+          name: f.get("name"),
+          email: f.get("email"),
+          phone: f.get("phone"),
+          birthday: f.get("birthday") || null,
+          notes: f.get("notes"),
+          created_by: session.user.id,
+        });
       }
       if (form === "notice") {
-        result = await db
-          .from("announcements")
-          .insert({
-            title: f.get("title"),
-            body: f.get("body"),
-            category: f.get("category"),
-            created_by: session.user.id,
-          });
+        result = await db.from("announcements").insert({
+          title: f.get("title"),
+          body: f.get("body"),
+          category: f.get("category"),
+          created_by: session.user.id,
+        });
       }
       if (form === "pix") {
-        result = await db
-          .from("community_settings")
-          .upsert({
-            id: 1,
-            pix_key: f.get("key"),
-            pix_name: f.get("name"),
-            pix_city: f.get("city"),
-          });
+        result = await db.from("community_settings").upsert({
+          id: 1,
+          pix_key: f.get("key"),
+          pix_name: f.get("name"),
+          pix_city: f.get("city"),
+        });
       }
       if (form === "contribution") {
         const id = crypto.randomUUID();
@@ -192,19 +188,17 @@ export default function Community({
             .upload(proof_path, file, { contentType: file.type });
           if (upload.error) throw upload.error;
         }
-        result = await db
-          .from("contributions")
-          .insert({
-            id,
-            kind: giving,
-            amount: Number(f.get("amount")),
-            paid_on: f.get("date"),
-            competence: f.get("competence"),
-            parishioner_id: f.get("person") || null,
-            user_id: session.user.id,
-            proof_path,
-            status: "Pendente",
-          });
+        result = await db.from("contributions").insert({
+          id,
+          kind: giving,
+          amount: Number(f.get("amount")),
+          paid_on: f.get("date"),
+          competence: f.get("competence"),
+          parishioner_id: f.get("person") || null,
+          user_id: session.user.id,
+          proof_path,
+          status: "Pendente",
+        });
         if (result.error && proof_path)
           await db.storage.from("receipts").remove([proof_path]);
       }
@@ -220,6 +214,10 @@ export default function Community({
     }
   }
   async function confirm(p) {
+    if (!confirmPayments)
+      return notify(
+        "A conferência é exclusiva do Conselho Econômico e do Administrador.",
+      );
     if (!guard()) return;
     const { error } = await db
       .from("contributions")
@@ -261,16 +259,14 @@ export default function Community({
         userVisibleOnly: true,
         applicationServerKey: Uint8Array.from(raw, (c) => c.charCodeAt(0)),
       });
-      const { error } = await db
-        .from("push_subscriptions")
-        .upsert(
-          {
-            user_id: session.user.id,
-            endpoint: sub.endpoint,
-            subscription: sub.toJSON(),
-          },
-          { onConflict: "endpoint" },
-        );
+      const { error } = await db.from("push_subscriptions").upsert(
+        {
+          user_id: session.user.id,
+          endpoint: sub.endpoint,
+          subscription: sub.toJSON(),
+        },
+        { onConflict: "endpoint" },
+      );
       if (error) throw error;
       notify("Notificações ativadas neste dispositivo.");
     } catch (err) {
@@ -502,7 +498,7 @@ export default function Community({
                   window.open(
                     "https://wa.me/?text=" +
                       encodeURIComponent(
-                        "Paz e bem! A Capela Nossa Senhora Aparecida agradece seu carinho e sua contribuição. Se desejar, procure a secretaria para informações sobre dízimos e ofertas. Que Deus abençoe sua família!",
+                        "Paz e bem! A Capela Nossa Senhora Aparecida agradece seu carinho e sua contribuição. Se desejar, procure a Pastoral do Dízimo para informações sobre dízimos e ofertas. Que Deus abençoe sua família!",
                       ),
                     "_blank",
                     "noopener,noreferrer",
@@ -568,8 +564,8 @@ export default function Community({
                 <ShieldCheck />
                 <h3>Pix em preparação</h3>
                 <p>
-                  Chave informada: uniao.mitra@hotmail.com. Cidade: Palotina.
-                  O QR Code será liberado após confirmar o nome do beneficiário.
+                  Chave informada: uniao.mitra@hotmail.com. Cidade: Palotina. O
+                  QR Code será liberado após confirmar o nome do beneficiário.
                 </p>
               </div>
             )}
@@ -583,8 +579,8 @@ export default function Community({
               <Upload size={18} /> Registrar pagamento e comprovante
             </button>
             <small className="muted">
-              O envio do comprovante aguarda a conferência da tesouraria. O QR
-              Code não confirma o pagamento automaticamente.
+              O envio do comprovante aguarda a conferência do Conselho
+              Econômico. O QR Code não confirma o pagamento automaticamente.
             </small>
           </section>
           <section className="white-card">
@@ -614,7 +610,10 @@ export default function Community({
           <div className="section-heading">
             <div>
               <h2>Dizimistas da comunidade</h2>
-              <p>Cadastro reservado à administração e tesouraria.</p>
+              <p>
+                Cadastro disponível à Pastoral do Dízimo, ao Conselho Econômico
+                e ao Administrador.
+              </p>
             </div>
             <button className="primary" onClick={() => setForm("person")}>
               <Plus size={17} /> Cadastrar
@@ -667,12 +666,14 @@ export default function Community({
                 proof={proof}
                 person={people.find((x) => x.id === p.parishioner_id)?.name}
                 action={
-                  <button
-                    className="secondary small"
-                    onClick={() => confirm(p)}
-                  >
-                    {p.status === "Confirmado" ? "Reabrir" : "Confirmar"}
-                  </button>
+                  confirmPayments && (
+                    <button
+                      className="secondary small"
+                      onClick={() => confirm(p)}
+                    >
+                      {p.status === "Confirmado" ? "Reabrir" : "Confirmar"}
+                    </button>
+                  )
                 }
               />
             ))}

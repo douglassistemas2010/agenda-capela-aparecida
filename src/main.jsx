@@ -28,6 +28,7 @@ import {
 import { dateKey, parseDay, fee, period, conflicts, shareText } from "./domain";
 import "./style.css";
 import Community from "./community";
+import { roles, roleKeys, roleLabel, canOrganize } from "./roles";
 const configured = !!(
   import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
 );
@@ -134,7 +135,7 @@ const demoEvents = [
     id: `demo-${i}`,
     date: dateKey(d),
     status: "Confirmado",
-    creator_name: "Secretaria · exemplo",
+    creator_name: "Conselho Administrativo · exemplo",
     created_at: now.toISOString(),
     amount: fee(e.type, e.contributor),
   };
@@ -155,10 +156,7 @@ function App() {
     [members, setMembers] = useState([]),
     [loading, setLoading] = useState(configured);
   const demo = !configured,
-    canWrite =
-      !demo &&
-      ["admin", "secretaria"].includes(profile?.role) &&
-      profile?.approved,
+    canWrite = !demo && canOrganize(profile?.role) && profile?.approved,
     admin = profile?.role === "admin" && profile?.approved;
   const notify = (m) => setToast(m);
   async function load() {
@@ -519,13 +517,7 @@ function App() {
               <span>
                 {demo ? "Visitante" : name}
                 <small>
-                  {demo
-                    ? "Conheça a agenda"
-                    : profile?.role === "admin"
-                      ? "Administrador"
-                      : profile?.role === "secretaria"
-                        ? "Secretaria"
-                        : "Consulta"}
+                  {demo ? "Conheça a agenda" : roleLabel(profile?.role)}
                 </small>
               </span>
             </button>
@@ -919,9 +911,11 @@ function App() {
                       <h3>Cadastro com aprovação</h3>
                       <p>
                         Compartilhe o link do app. A pessoa se cadastra e você
-                        aprova o acesso aqui. Administrador gerencia acessos;
-                        secretaria organiza reservas; tesouraria confere
-                        contribuições; consulta visualiza a agenda.
+                        aprova o acesso aqui. O Administrador gerencia acessos;
+                        o Conselho Administrativo organiza a agenda e os
+                        comunicados; o Conselho Econômico confere os pagamentos;
+                        a Pastoral do Dízimo cuida dos dizimistas e registra as
+                        contribuições.
                       </p>
                     </div>
                   </div>
@@ -955,16 +949,13 @@ function App() {
                           <div className="member-actions">
                             <CustomSelect
                               label="Perfil"
-                              value={m.role}
-                              options={[
-                                "consulta",
-                                "secretaria",
-                                "tesouraria",
-                                "admin",
-                              ]}
-                              onChange={(role) =>
+                              value={roleLabel(m.role)}
+                              options={roleKeys.map(roleLabel)}
+                              onChange={(label) =>
                                 changeMember(m.id, {
-                                  role,
+                                  role: roleKeys.find(
+                                    (key) => roles[key] === label,
+                                  ),
                                   approved: m.approved,
                                 })
                               }

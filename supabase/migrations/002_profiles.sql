@@ -1,0 +1,31 @@
+-- Execute depois de 001_community.sql. Atualiza apenas os perfis e suas politicas.
+-- Contas legadas de consulta/tesouraria voltam para aprovacao para evitar ampliar acesso.
+begin;
+alter table public.profiles drop constraint profiles_role_check;
+update public.profiles set role='conselho_administrativo' where role='secretaria';
+update public.profiles set role='conselho_economico',approved=false where role='tesouraria';
+update public.profiles set role='pastoral_dizimo',approved=false where role='consulta';
+alter table public.profiles alter column role set default 'pastoral_dizimo';
+alter table public.profiles add constraint profiles_role_check check(role in ('admin','conselho_administrativo','conselho_economico','pastoral_dizimo'));
+create or replace function public.is_member() returns boolean language sql stable security definer set search_path=public as $$ select public.has_role(array['admin','conselho_administrativo','conselho_economico','pastoral_dizimo']) $$;
+drop policy events_insert on public.events;
+create policy events_insert on public.events for insert to authenticated with check(public.has_role(array['admin','conselho_administrativo']));
+drop policy events_update on public.events;
+create policy events_update on public.events for update to authenticated using(public.has_role(array['admin','conselho_administrativo'])) with check(public.has_role(array['admin','conselho_administrativo']));
+drop policy parishioners_read on public.parishioners;
+create policy parishioners_read on public.parishioners for select to authenticated using(public.has_role(array['admin','conselho_economico','pastoral_dizimo']));
+drop policy parishioners_insert on public.parishioners;
+create policy parishioners_insert on public.parishioners for insert to authenticated with check(public.has_role(array['admin','conselho_economico','pastoral_dizimo']) and created_by=auth.uid());
+drop policy parishioners_update on public.parishioners;
+create policy parishioners_update on public.parishioners for update to authenticated using(public.has_role(array['admin','conselho_economico','pastoral_dizimo'])) with check(public.has_role(array['admin','conselho_economico','pastoral_dizimo']));
+drop policy contributions_read on public.contributions;
+create policy contributions_read on public.contributions for select to authenticated using(public.is_member() and (user_id=auth.uid() or public.has_role(array['admin','conselho_economico','pastoral_dizimo'])));
+drop policy contributions_insert on public.contributions;
+create policy contributions_insert on public.contributions for insert to authenticated with check(public.is_member() and user_id=auth.uid() and status='Pendente' and confirmed_by is null and confirmed_at is null and (parishioner_id is null or public.has_role(array['admin','conselho_economico','pastoral_dizimo'])) and (proof_path is null or proof_path like auth.uid()::text||'/%'));
+drop policy contributions_update on public.contributions;
+create policy contributions_update on public.contributions for update to authenticated using(public.has_role(array['admin','conselho_economico'])) with check(public.has_role(array['admin','conselho_economico']));
+drop policy announcements_insert on public.announcements;
+create policy announcements_insert on public.announcements for insert to authenticated with check(public.has_role(array['admin','conselho_administrativo']) and created_by=auth.uid());
+drop policy receipts_read on storage.objects;
+create policy receipts_read on storage.objects for select to authenticated using(bucket_id='receipts' and public.is_member() and ((storage.foldername(name))[1]=auth.uid()::text or public.has_role(array['admin','conselho_economico','pastoral_dizimo'])));
+commit;

@@ -10,7 +10,7 @@ Deno.serve(async(req)=>{
  const userClient=createClient(url,anon,{global:{headers:{Authorization:req.headers.get('Authorization')||''}}});
  const {data:{user}}=await userClient.auth.getUser();if(!user)return new Response('Unauthorized',{status:401,headers:cors});
  const {data:profile}=await userClient.from('profiles').select('role,approved').eq('id',user.id).single();
- if(!profile?.approved||!['admin','secretaria'].includes(profile.role))return new Response('Forbidden',{status:403,headers:cors});
+ if(!profile?.approved||!['admin','conselho_administrativo'].includes(profile.role))return new Response('Forbidden',{status:403,headers:cors});
  const {announcement_id}=await req.json();
  const service=createClient(url,Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
  const {data:notice,error:noticeError}=await service.from('announcements').select('id,title').eq('id',announcement_id).single();

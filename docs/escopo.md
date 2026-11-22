@@ -4,15 +4,16 @@
 
 - Capela Nossa Senhora Aparecida, Bairro União, Palotina.
 - Administrador: aprovar/suspender acesso, perfis, reservas, financeiro e Pix.
-- Secretaria: agenda, celebrações e mural.
-- Tesouraria: cadastro de dizimistas, dados pessoais, contribuições e conferência de comprovantes.
-- Consulta: agenda, mural, registro e acompanhamento das próprias contribuições.
+- Conselho Administrativo: agenda, celebrações, mural e envio de comunicados.
+- Conselho Econômico: dizimistas, dados pessoais, contribuições, gráficos e conferência de comprovantes.
+- Pastoral do Dízimo: cadastro de dizimistas, aniversariantes e registro/acompanhamento das contribuições; sem confirmar pagamentos ou gerenciar acessos.
+- Todos os perfis aprovados podem consultar a agenda e o mural e registrar suas próprias contribuições.
 
 ## Fluxos disponíveis no código
 
 1. Cadastro → confirmação do e-mail → aprovação → acesso conforme perfil.
 2. Reserva → validação de horário → cálculo de taxa → gravação com autor → compartilhamento pelo WhatsApp.
-3. Contribuição → Pix no banco do fiel → registro com comprovante → pendente → conferência da tesouraria → confirmado → gráfico.
+3. Contribuição → Pix no banco do fiel → registro com comprovante → pendente → conferência do Conselho Econômico → confirmado → gráfico.
 4. Comunicado → publicação no mural → compartilhamento ou envio manual de push.
 
 ## Evoluções planejadas, não entregues como operacionais

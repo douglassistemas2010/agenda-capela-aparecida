@@ -36,5 +36,5 @@ export function shareText(events, label) {
           `${parseDay(e.date).toLocaleDateString("pt-BR")} • ${e.start_time.slice(0, 5)}–${e.end_time.slice(0, 5)}\n${e.type} · ${e.title}`,
       )
       .join("\n\n") || "Nenhuma reserva neste período."
-  }\n\nConsulte a secretaria para informações.`;
+  }\n\nConsulte o Conselho Administrativo para informações.`;
 }
