@@ -28,6 +28,7 @@ import "./style.css";
 import "./identity.css";
 import Community from "./community";
 import { roles, roleKeys, roleLabel, canOrganize } from "./roles";
+import { owner, loginEmail } from "./owner";
 const configured = !!(
   import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
 );
@@ -265,7 +266,7 @@ function App() {
       (a.date + a.start_time).localeCompare(b.date + b.start_time),
     );
   const name = demo
-    ? "visitante"
+    ? owner.name.split(" ")[0]
     : (
         profile?.name ||
         session?.user?.user_metadata?.full_name ||
@@ -369,7 +370,7 @@ function App() {
     const redirect = window.location.origin + window.location.pathname;
     if (modal.mode === "signup")
       result = await db.auth.signUp({
-        email: f.get("email"),
+        email: loginEmail(f.get("email")),
         password: f.get("password"),
         options: {
           data: { full_name: f.get("name") },
@@ -377,12 +378,12 @@ function App() {
         },
       });
     else if (modal.mode === "reset")
-      result = await db.auth.resetPasswordForEmail(f.get("email"), {
+      result = await db.auth.resetPasswordForEmail(loginEmail(f.get("email")), {
         redirectTo: redirect,
       });
     else
       result = await db.auth.signInWithPassword({
-        email: f.get("email"),
+        email: loginEmail(f.get("email")),
         password: f.get("password"),
       });
     setBusy(false);
@@ -517,13 +518,11 @@ function App() {
                   : setModal({ kind: "auth", mode: "login" })
               }
             >
-              <span className="avatar">
-                {demo ? "V" : name.slice(0, 1).toUpperCase()}
-              </span>
+              <span className="avatar">{name.slice(0, 1).toUpperCase()}</span>
               <span>
-                {demo ? "Visitante" : name}
+                {demo ? owner.name : name}
                 <small>
-                  {demo ? "Conheça a agenda" : roleLabel(profile?.role)}
+                  {demo ? "Administrador · prévia" : roleLabel(profile?.role)}
                 </small>
               </span>
             </button>
@@ -541,8 +540,8 @@ function App() {
             <div className="notice">
               <ShieldCheck size={17} />
               <span>
-                Prévia da comunidade · dados ilustrativos. Reservas e login
-                serão liberados após ativar o banco online.
+                Prévia do Administrador Douglas · dados ilustrativos. Reservas e
+                login serão liberados após ativar o banco online.
               </span>
               <button onClick={() => setModal({ kind: "auth", mode: "login" })}>
                 Entrar
@@ -1139,12 +1138,21 @@ function App() {
                     </label>
                   )}
                   <label>
-                    E-mail
+                    {modal.mode === "signup" ? "E-mail" : "E-mail ou usuário"}
                     <input
                       name="email"
-                      type="email"
+                      type={modal.mode === "signup" ? "email" : "text"}
                       required
-                      autoComplete="email"
+                      autoComplete={
+                        modal.mode === "signup" ? "email" : "username"
+                      }
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      placeholder={
+                        modal.mode === "signup"
+                          ? "seu@email.com"
+                          : "E-mail ou douglas"
+                      }
                     />
                   </label>
                   {modal.mode !== "reset" && (

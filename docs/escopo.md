@@ -4,6 +4,7 @@
 
 - Capela Nossa Senhora Aparecida, Bairro União, Palotina.
 - Administrador: aprovar/suspender acesso, perfis, reservas, financeiro e Pix.
+- Proprietário/desenvolvedor: Douglas Araujo Gomes, usuário `douglas`, vinculado a `douglas_sistemas2010@hotmail.com`. Administração completa após confirmação do e-mail no Supabase e aplicação da migração 003. A prévia pública identifica esse contexto como demonstração, sem criar sessão autenticada ou senha padrão.
 - Conselho Administrativo: agenda, celebrações, mural e envio de comunicados.
 - Conselho Econômico: dizimistas, dados pessoais, contribuições, gráficos e conferência de comprovantes.
 - Pastoral do Dízimo: cadastro de dizimistas, aniversariantes e registro/acompanhamento das contribuições; sem confirmar pagamentos ou gerenciar acessos.

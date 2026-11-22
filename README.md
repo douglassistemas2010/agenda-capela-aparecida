@@ -30,12 +30,12 @@ O backend deste app está em `supabase/`, separado dos outros projetos. A migra�
 ### Ativar operação real
 
 1. Criar um projeto Supabase dedicado, sem contratar plano pago por este procedimento.
-2. Executar `supabase/migrations/001_community.sql` e depois `supabase/migrations/002_profiles.sql` no SQL Editor desse projeto. Se a primeira já foi aplicada, executar somente a segunda. A segunda mantém antigos usuários da Secretaria no Conselho Administrativo; antigos perfis de Tesouraria e Consulta precisam de nova aprovação para revisar as novas permissões.
+2. Executar as migrações `001_community.sql`, `002_profiles.sql` e `003_owner.sql`, nessa ordem, no SQL Editor desse projeto. Executar somente as ainda não aplicadas. A segunda mantém antigos usuários da Secretaria no Conselho Administrativo; antigos perfis de Tesouraria e Consulta precisam de nova aprovação para revisar as novas permissões.
 3. Em Authentication > URL Configuration, definir a URL do GitHub Pages como Site URL e redirect permitido.
 4. Configurar envio de e-mails/SMTP, confirmação de e-mail e limites do Auth no Supabase.
 5. Copiar `.env.example` para `.env` local e preencher a URL e a chave **pública** anon/publishable. Nunca colocar senha de banco, service_role ou segredos OAuth em variáveis VITE.
 6. Para publicação direta, configurar essas variáveis no `.env` local e compilar. Ao ativar GitHub Actions futuramente, cadastrar `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` em Settings > Secrets and variables > Actions > Variables.
-7. Cadastrar e confirmar o e-mail do proprietário. Promovê-lo via SQL Editor usando o comando comentado ao final da migração. Os demais usuários serão aprovados pela tela Pessoas.
+7. Cadastrar e confirmar `douglas_sistemas2010@hotmail.com`. A migração 003 prepara essa identidade como **Douglas Araujo Gomes**, Administrador aprovado com acesso completo. O login aceita **douglas** como apelido desse e-mail e a senha pessoal definida no cadastro. Nenhuma senha padrão é criada ou publicada. Os demais usuários serão aprovados pela tela Pessoas. Google/Apple precisam retornar esse mesmo e-mail confirmado; um e-mail privado da Apple representa outra identidade e não recebe administração automaticamente.
 8. Habilitar Google e Apple no Supabase e configurar os apps/redirects nos respectivos consoles. A configuração Apple exige credenciais e manutenção do segredo do provedor.
 
 ### Pix
