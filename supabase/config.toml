@@ -1,0 +1,3 @@
+# A própria função verifica JWT com auth.getUser, ou o segredo exclusivo do cron.
+[functions.send-push]
+verify_jwt = false

@@ -26,11 +26,14 @@ O backend deste app está em `supabase/`, separado dos outros projetos. A migra�
 - Mural de comunicados, promoções e eventos e lembrete compartilhável no WhatsApp.
 - Base PWA instalável, service worker **sem cache**, inscrição em push e função de envio de comunicados para dispositivos autorizados.
 - Reflexão diária editorial inspirada em referências bíblicas. Não é uma integração com o lecionário/liturgia oficial do dia.
+- Abertura compacta com reflexão e cartão da próxima missa/celebração do fim de semana, com data e horário. A ausência de cadastro aparece como programação a confirmar.
+- Formulários longos divididos em etapas, preservando os dados digitados. Os pop-ups não possuem área interna de rolagem; em telas baixas, o fundo da janela pode deslizar para manter os campos acessíveis.
+- Cópia HTML única de layout, gerada automaticamente a cada build, e atalho local para a versão online.
 
 ### Ativar operação real
 
 1. Criar um projeto Supabase dedicado, sem contratar plano pago por este procedimento.
-2. Executar as migrações `001_community.sql`, `002_profiles.sql` e `003_owner.sql`, nessa ordem, no SQL Editor desse projeto. Executar somente as ainda não aplicadas. A segunda mantém antigos usuários da Secretaria no Conselho Administrativo; antigos perfis de Tesouraria e Consulta precisam de nova aprovação para revisar as novas permissões.
+2. Executar as migrações `001_community.sql`, `002_profiles.sql`, `003_owner.sql` e `004_notifications.sql`, nessa ordem, no SQL Editor desse projeto. Executar somente as ainda não aplicadas. A segunda mantém antigos usuários da Secretaria no Conselho Administrativo; antigos perfis de Tesouraria e Consulta precisam de nova aprovação para revisar as novas permissões.
 3. Em Authentication > URL Configuration, definir a URL do GitHub Pages como Site URL e redirect permitido.
 4. Configurar envio de e-mails/SMTP, confirmação de e-mail e limites do Auth no Supabase.
 5. Copiar `.env.example` para `.env` local e preencher a URL e a chave **pública** anon/publishable. Nunca colocar senha de banco, service_role ou segredos OAuth em variáveis VITE.
@@ -48,10 +51,11 @@ Em Comunidade > Contribuir > Configurar Pix, o administrador cadastra chave, nom
 
 - Gerar um par VAPID e guardar a chave privada somente como segredo da função Supabase.
 - Configurar `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` no backend e `VITE_VAPID_PUBLIC_KEY` como variável pública de build.
-- Publicar `supabase/functions/send-push/index.ts` com a CLI Supabase. A função exige sessão de Administrador ou Conselho Administrativo e distribui apenas notificações genéricas de comunicados já existentes.
+- Publicar `supabase/functions/send-push/index.ts` com a CLI Supabase. A função verifica a autenticação e as permissões por assunto; o cron usa um segredo exclusivo. Consulte [a estrutura de notificações](docs/notificacoes.md).
 - O usuário ativa a permissão no próprio dispositivo. No iPhone/iPad compatível, instalar na tela inicial e abrir o app instalado antes de ativar push.
-- O botão **Notificar** no mural envia o comunicado aos dispositivos inscritos. Não há disparos nesta demonstração.
-- Lembretes automáticos agendados de dízimos/ofertas, aniversários e celebrações ainda precisam de agenda de execução, consentimento por categoria, deduplicação e preferências de horário. Nesta versão, há lembrete manual no WhatsApp e envio manual de push de comunicados.
+- Em **Comunidade > Notificações**, crie o aviso, escolha assunto e público, revise a prévia e confirme o envio imediato ou agendado. Mural, aniversários e pagamentos confirmados possuem atalhos para preparar a mensagem; os atalhos não disparam automaticamente.
+- A central inclui histórico de autor, horário, aceites/falhas, cancelamento de avisos ainda na fila, preferências individuais, pausa de assuntos pelo Administrador e vínculo seguro entre dizimista e conta. Recebimentos são individuais e nunca exibem valores ou comprovantes na notificação.
+- O processamento agendado depende de ativar o modelo `templates/notifications-cron.sql.example` e o segredo `NOTIFICATION_CRON_SECRET`. Não há rotinas recorrentes automáticas de aniversário ou cobrança ativadas. Nenhum disparo ocorre na demonstração.
 
 ### Privacidade e limites
 
@@ -72,8 +76,10 @@ npm run build
 
 A publicação atual usa a branch `gh-pages`, com o app compilado. Para atualizar: `npm test`, `npm run build` e `node scripts/deploy-pages.mjs`. O modelo `templates/github-pages.yml.example` permite ativar GitHub Actions futuramente, quando a autorização GitHub incluir o escopo `workflow`; mova-o para `.github/workflows/pages.yml`. O banco e o serviço de push são serviços separados do GitHub Pages.
 
+`npm run build` também atualiza `PREVIA-APP.html`, na raiz e em `dist/`. É um arquivo único com CSS e JavaScript incorporados para conferir o layout, sempre em demonstração. Não autentica nem acessa dados reais. `ABRIR-APP.html` é o atalho para a versão online mais recente. A cópia publicada está em [PREVIA-APP.html](https://douglassistemas2010.github.io/agenda-capela-aparecida/PREVIA-APP.html). O arquivo gerado da raiz é ignorado pelo Git; o gerador e o atalho são versionados.
+
 ## Verificação
 
-Testes automatizados de taxas, limites de períodos, colisões, privacidade do resumo WhatsApp e CRC Pix. Build Vite validado. A autenticação, as políticas SQL, os comprovantes, o Pix bancário e o push precisam ser testados de ponta a ponta após provisionar o Supabase e os provedores. A revisão visual no navegador não pôde ser concluída nesta sessão por indisponibilidade do acesso ao navegador.
+Testes automatizados de taxas, períodos, colisões, resumo WhatsApp, CRC Pix, cartão do fim de semana e permissões de notificação. As quatro migrações são executadas integralmente em PostgreSQL via PGlite, emulando os schemas da plataforma, com testes de RLS, proprietário confirmado, recebimentos individuais, preferências, agendamento e prevenção de aquisição duplicada de entregas. Build Vite e sintaxe/bundle da Edge Function validados. Auth, Storage, Pix bancário, cron e push ainda precisam de verificação ponta a ponta no Supabase e nos aparelhos reais. A revisão visual automatizada no navegador permanece pendente.
 
 Documentação oficial: [Supabase Auth](https://supabase.com/docs/guides/auth), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [Google](https://supabase.com/docs/guides/auth/social-login/auth-google), [Apple](https://supabase.com/docs/guides/auth/social-sign-in/auth-apple), [Web Push no iOS](https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/).

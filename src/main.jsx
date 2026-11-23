@@ -1,3 +1,4 @@
+import ResponsiveForm from "./ResponsiveForm";
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { createClient } from "@supabase/supabase-js";
@@ -26,12 +27,19 @@ import {
 import { dateKey, parseDay, fee, period, conflicts, shareText } from "./domain";
 import "./style.css";
 import "./identity.css";
+import "./experience.css";
 import Community from "./community";
 import { roles, roleKeys, roleLabel, canOrganize } from "./roles";
 import { owner, loginEmail } from "./owner";
-const configured = !!(
-  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import WeekendCard from "./WeekendCard";
+const localPreview =
+  window.location.protocol === "file:" ||
+  window.location.pathname.toUpperCase().endsWith("/PREVIA-APP.HTML");
+const configured =
+  !localPreview &&
+  !!(
+    import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY
+  );
 const db = configured
   ? createClient(
       import.meta.env.VITE_SUPABASE_URL,
@@ -293,11 +301,7 @@ function App() {
     );
   }
   function newEvent() {
-    if (demo)
-      return notify(
-        "Demonstração: ative o banco online para criar reservas reais.",
-      );
-    if (!canWrite)
+    if (!demo && !canWrite)
       return notify("Seu perfil permite apenas consultar a agenda.");
     setModal({
       kind: "event",
@@ -316,6 +320,10 @@ function App() {
   }
   async function save(e) {
     e.preventDefault();
+    if (demo)
+      return notify(
+        "Prévia do formulário: nenhum dado foi salvo. Ative o banco para registrar reservas reais.",
+      );
     if (!canWrite || !online)
       return notify("É necessário estar online e autorizado.");
     const form = new FormData(e.currentTarget);
@@ -606,117 +614,127 @@ function App() {
                       <Plus size={19} /> Nova reserva
                     </button>
                   </section>
-                  <section className="reflection">
-                    <div className="reflection-copy">
-                      <span className="reflection-label">
-                        <BookOpen size={17} /> PALAVRA PARA O DIA
-                      </span>
-                      <h2>{reflection[1]}</h2>
-                      <p>{reflection[2]}</p>
-                      <div className="reflection-reference">
-                        <span>{reflection[0]}</span>
-                        <span>Reflexão inspirada na Bíblia</span>
+                  <div className="home-spotlight">
+                    <section className="reflection">
+                      <div className="reflection-copy">
+                        <span className="reflection-label">
+                          <BookOpen size={17} /> PALAVRA PARA O DIA
+                        </span>
+                        <h2>{reflection[1]}</h2>
+                        <p>{reflection[2]}</p>
+                        <div className="reflection-reference">
+                          <span>{reflection[0]}</span>
+                          <span>Reflexão inspirada na Bíblia</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="reflection-art" aria-hidden="true">
-                      <svg
-                        className="marian-art"
-                        viewBox="0 0 260 300"
-                        fill="none"
-                      >
-                        <defs>
-                          <linearGradient
-                            id="mantle"
-                            x1="65"
-                            y1="100"
-                            x2="205"
-                            y2="285"
-                            gradientUnits="userSpaceOnUse"
-                          >
-                            <stop stopColor="#6196e0" stopOpacity=".5" />
-                            <stop
-                              offset="1"
-                              stopColor="#143d83"
-                              stopOpacity=".15"
-                            />
-                          </linearGradient>
-                          <linearGradient id="gold-stroke">
-                            <stop stopColor="#f6e4ae" />
-                            <stop offset="1" stopColor="#c29a4d" />
-                          </linearGradient>
-                        </defs>
-                        <path
-                          d="M35 270V119a95 95 0 0 1 190 0v151"
-                          stroke="#c7a15a"
-                          strokeOpacity=".24"
-                        />
-                        <path
-                          d="M48 270V120a82 82 0 0 1 164 0v150"
-                          stroke="#c7a15a"
-                          strokeOpacity=".12"
-                        />
-                        <circle
-                          cx="130"
-                          cy="114"
-                          r="51"
-                          stroke="#f1d791"
-                          strokeOpacity=".23"
-                        />
-                        <circle
-                          cx="130"
-                          cy="114"
-                          r="42"
-                          stroke="#f1d791"
-                          strokeOpacity=".12"
-                        />
-                        <path
-                          d="M109 85l-8-25 20 10 9-21 10 21 20-10-9 25z"
-                          fill="url(#gold-stroke)"
-                        />
-                        <path
-                          d="M109 92c-10 15-15 35-21 54L55 260q75 24 150 0l-33-114c-6-19-11-39-21-54"
-                          fill="url(#mantle)"
-                          stroke="url(#gold-stroke)"
-                          strokeWidth="1.7"
-                        />
-                        <path
-                          d="M114 96c4-8 28-8 32 0l-2 21c-2 14-24 14-27 0z"
-                          fill="#d9bf88"
-                          fillOpacity=".88"
-                        />
-                        <path
-                          d="M130 139l-12 18 12 23 12-23-12-18zm0 41v70m-12-93L88 248m54-91 30 91"
-                          stroke="#edd59a"
-                          strokeOpacity=".65"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                        />
-                        {[
-                          [-56, 39],
-                          [-35, 20],
-                          [0, 13],
-                          [35, 20],
-                          [56, 39],
-                        ].map(([x, y], i) => (
+                      <div className="reflection-art" aria-hidden="true">
+                        <svg
+                          className="marian-art"
+                          viewBox="0 0 260 300"
+                          fill="none"
+                        >
+                          <defs>
+                            <linearGradient
+                              id="mantle"
+                              x1="65"
+                              y1="100"
+                              x2="205"
+                              y2="285"
+                              gradientUnits="userSpaceOnUse"
+                            >
+                              <stop stopColor="#6196e0" stopOpacity=".5" />
+                              <stop
+                                offset="1"
+                                stopColor="#143d83"
+                                stopOpacity=".15"
+                              />
+                            </linearGradient>
+                            <linearGradient id="gold-stroke">
+                              <stop stopColor="#f6e4ae" />
+                              <stop offset="1" stopColor="#c29a4d" />
+                            </linearGradient>
+                          </defs>
                           <path
-                            key={i}
-                            d={`M${130 + x} ${y}v7m-3.5-3.5h7`}
-                            stroke="#ead296"
-                            strokeWidth="1.4"
+                            d="M35 270V119a95 95 0 0 1 190 0v151"
+                            stroke="#c7a15a"
+                            strokeOpacity=".24"
+                          />
+                          <path
+                            d="M48 270V120a82 82 0 0 1 164 0v150"
+                            stroke="#c7a15a"
+                            strokeOpacity=".12"
+                          />
+                          <circle
+                            cx="130"
+                            cy="114"
+                            r="51"
+                            stroke="#f1d791"
+                            strokeOpacity=".23"
+                          />
+                          <circle
+                            cx="130"
+                            cy="114"
+                            r="42"
+                            stroke="#f1d791"
+                            strokeOpacity=".12"
+                          />
+                          <path
+                            d="M109 85l-8-25 20 10 9-21 10 21 20-10-9 25z"
+                            fill="url(#gold-stroke)"
+                          />
+                          <path
+                            d="M109 92c-10 15-15 35-21 54L55 260q75 24 150 0l-33-114c-6-19-11-39-21-54"
+                            fill="url(#mantle)"
+                            stroke="url(#gold-stroke)"
+                            strokeWidth="1.7"
+                          />
+                          <path
+                            d="M114 96c4-8 28-8 32 0l-2 21c-2 14-24 14-27 0z"
+                            fill="#d9bf88"
+                            fillOpacity=".88"
+                          />
+                          <path
+                            d="M130 139l-12 18 12 23 12-23-12-18zm0 41v70m-12-93L88 248m54-91 30 91"
+                            stroke="#edd59a"
+                            strokeOpacity=".65"
+                            strokeWidth="1.5"
                             strokeLinecap="round"
                           />
-                        ))}
-                        <path
-                          d="M67 273q63 18 126 0"
-                          stroke="#e4c47e"
-                          strokeOpacity=".45"
-                        />
-                      </svg>
-                      <span>
-                        <Sparkles size={12} /> Sob o manto do amor.
-                      </span>
-                    </div>
-                  </section>
+                          {[
+                            [-56, 39],
+                            [-35, 20],
+                            [0, 13],
+                            [35, 20],
+                            [56, 39],
+                          ].map(([x, y], i) => (
+                            <path
+                              key={i}
+                              d={`M${130 + x} ${y}v7m-3.5-3.5h7`}
+                              stroke="#ead296"
+                              strokeWidth="1.4"
+                              strokeLinecap="round"
+                            />
+                          ))}
+                          <path
+                            d="M67 273q63 18 126 0"
+                            stroke="#e4c47e"
+                            strokeOpacity=".45"
+                          />
+                        </svg>
+                        <span>
+                          <Sparkles size={12} /> Sob o manto do amor.
+                        </span>
+                      </div>
+                    </section>
+                    <WeekendCard
+                      events={events}
+                      onOpen={(day) => {
+                        setDate(parseDay(day));
+                        setView("Dia");
+                        setTab("Agenda");
+                      }}
+                    />
+                  </div>
                   <div className="stats">
                     <div>
                       <span className="stat-icon green">
@@ -1230,7 +1248,7 @@ function App() {
                 <h2>
                   {modal.event.id ? "Editar reserva" : "Um novo encontro"}
                 </h2>
-                <form onSubmit={save}>
+                <ResponsiveForm onSubmit={save}>
                   <label>
                     Nome do encontro ou dos noivos
                     <input
@@ -1360,7 +1378,7 @@ function App() {
                   <button className="primary full" disabled={busy || !online}>
                     {busy ? "Salvando…" : "Salvar reserva"}
                   </button>
-                </form>
+                </ResponsiveForm>
               </>
             )}
             {modal.kind === "detail" && (
@@ -1493,6 +1511,9 @@ function App() {
 }
 function CustomSelect({ value, options, onChange, label }) {
   const [open, setOpen] = useState(false);
+  const choices = options.map((option) =>
+    typeof option === "string" ? { label: option, value: option } : option,
+  );
   return (
     <div
       className="custom-select"
@@ -1506,22 +1527,22 @@ function CustomSelect({ value, options, onChange, label }) {
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        {value}
+        {choices.find((option) => option.value === value)?.label || value}
         <ChevronRight size={16} className="chevron" />
       </button>
       {open && (
         <div className="select-options">
-          {options.map((o) => (
+          {choices.map((o) => (
             <button
               type="button"
-              key={o}
+              key={o.value}
               onClick={() => {
-                onChange(o);
+                onChange(o.value);
                 setOpen(false);
               }}
             >
-              {o}
-              {o === value && <Check size={15} />}
+              {o.label}
+              {o.value === value && <Check size={15} />}
             </button>
           ))}
         </div>
@@ -1723,7 +1744,7 @@ function TimeField({ name, label, value, onChange }) {
 }
 createRoot(document.getElementById("root")).render(<App />);
 
-if ("serviceWorker" in navigator)
+if ("serviceWorker" in navigator && !localPreview)
   window.addEventListener("load", () =>
     navigator.serviceWorker
       .register(import.meta.env.BASE_URL + "sw.js")

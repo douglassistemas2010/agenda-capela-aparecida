@@ -15,12 +15,13 @@
 1. Cadastro → confirmação do e-mail → aprovação → acesso conforme perfil.
 2. Reserva → validação de horário → cálculo de taxa → gravação com autor → compartilhamento pelo WhatsApp.
 3. Contribuição → Pix no banco do fiel → registro com comprovante → pendente → conferência do Conselho Econômico → confirmado → gráfico.
-4. Comunicado → publicação no mural → compartilhamento ou envio manual de push.
+4. Comunicado → publicação no mural → preparar aviso na central → escolher público e horário → revisar → confirmar disparo/agendamento → acompanhar histórico.
+5. Recebimento confirmado → preparar aviso → validar conta vinculada → enviar notificação individual sem valores na tela bloqueada.
+6. Abertura → reflexão compacta + próxima celebração do fim de semana, sem inventar programação.
 
 ## Evoluções planejadas, não entregues como operacionais
 
-- Lembretes automáticos com execução agendada, categorias de consentimento, horário e deduplicação.
-- Preferências e cancelamento de notificações no app.
+- Rotinas recorrentes automáticas, horários de silêncio e limites de frequência. A central atual já possui agendamento de um aviso, categorias de consentimento, cancelamento e aquisição única por dispositivo, mas o processador e o backend ainda aguardam ativação.
 - Integração bancária para Pix dinâmico, vencimento e confirmação por webhook, se houver contratação autorizada.
 - Aniversários compartilhados com consentimento individual. Atualmente a lista fica restrita à equipe financeira.
 - Liturgia oficial do dia, com fonte confiável e atualização monitorada. Atualmente existe um ciclo editorial de sete reflexões.

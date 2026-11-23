@@ -14,6 +14,8 @@ self.addEventListener("push", (event) => {
       {
         body: data.body || "Há novidades na comunidade.",
         tag: data.tag || "comunidade",
+        icon: new URL("icon-192.png", self.registration.scope).href,
+        badge: new URL("icon-192.png", self.registration.scope).href,
         data: { url: self.registration.scope },
       },
     ),

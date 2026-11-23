@@ -1,3 +1,5 @@
+import ResponsiveForm from "./ResponsiveForm";
+import Notifications from "./Notifications";
 import React, { useState, useEffect } from "react";
 import {
   Heart,
@@ -19,6 +21,7 @@ import QRCode from "qrcode";
 import { pixPayload } from "./pix";
 import { dateKey } from "./domain";
 import { canOrganize, canManageContributions, canConfirm } from "./roles";
+import { canNotify } from "./notification-domain";
 const money = (n) =>
   Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const monthNow = dateKey(new Date()).slice(0, 7);
@@ -45,6 +48,11 @@ export default function Community({
     [amount, setAmount] = useState(""),
     [file, setFile] = useState(null),
     [personId, setPersonId] = useState("");
+  const [notificationIntent, setNotificationIntent] = useState(null);
+  function openNotifications(intent) {
+    setNotificationIntent(intent);
+    setSection("Notificações");
+  }
   const finance = demo || canManageContributions(profile?.role),
     staff = demo || canOrganize(profile?.role),
     confirmPayments = demo || canConfirm(profile?.role),
@@ -329,8 +337,11 @@ export default function Community({
           </h1>
           <p>Generosidade, encontros e vida em comunhão.</p>
         </div>
-        <button className="secondary" onClick={enablePush}>
-          <Bell size={17} /> Receber avisos
+        <button
+          className="secondary"
+          onClick={() => setSection("Notificações")}
+        >
+          <Bell size={17} /> Notificações
         </button>
       </section>
       <div className="community-tabs">
@@ -339,6 +350,7 @@ export default function Community({
           "Contribuir",
           ...(finance ? ["Dizimistas", "Financeiro"] : []),
           "Mural",
+          "Notificações",
         ].map((s) => (
           <button
             className={section === s ? "selected" : ""}
@@ -467,6 +479,21 @@ export default function Community({
                       <span className="avatar">{p.name[0]}</span>
                       <b>{p.name}</b>
                       <span>Dia {p.birthday.slice(8)}</span>
+                      {(demo || canNotify(profile?.role, "aniversario")) && (
+                        <button
+                          className="icon-btn"
+                          aria-label={`Preparar parabéns para ${p.name}`}
+                          onClick={() =>
+                            openNotifications({
+                              category: "aniversario",
+                              recipient_id: p.linked_user_id || "",
+                              title: `Feliz aniversário, ${p.name.split(" ")[0]}!`,
+                            })
+                          }
+                        >
+                          <Bell size={16} />
+                        </button>
+                      )}
                     </div>
                   ))
               ) : (
@@ -668,12 +695,30 @@ export default function Community({
                 person={people.find((x) => x.id === p.parishioner_id)?.name}
                 action={
                   confirmPayments && (
-                    <button
-                      className="secondary small"
-                      onClick={() => confirm(p)}
-                    >
-                      {p.status === "Confirmado" ? "Reabrir" : "Confirmar"}
-                    </button>
+                    <>
+                      <button
+                        className="secondary small"
+                        onClick={() => confirm(p)}
+                      >
+                        {p.status === "Confirmado" ? "Reabrir" : "Confirmar"}
+                      </button>
+                      {p.status === "Confirmado" && (
+                        <button
+                          className="text-button"
+                          onClick={() =>
+                            openNotifications({
+                              category:
+                                p.kind === "Dízimo"
+                                  ? "recebimento_dizimo"
+                                  : "recebimento_oferta",
+                              contribution_id: p.id,
+                            })
+                          }
+                        >
+                          <Bell size={15} /> Avisar recebimento
+                        </button>
+                      )}
+                    </>
                   )
                 }
               />
@@ -711,24 +756,18 @@ export default function Community({
                   <small>
                     {new Date(n.created_at).toLocaleDateString("pt-BR")}
                   </small>
-                  {staff && !demo && (
+                  {staff && (
                     <button
                       className="text-button"
-                      onClick={async () => {
-                        const { data, error } = await db.functions.invoke(
-                          "send-push",
-                          { body: { announcement_id: n.id } },
-                        );
-                        if (error)
-                          notify("O envio push ainda precisa ser configurado.");
-                        else
-                          notify(
-                            data.sent +
-                              " notifica??es enviadas ? " +
-                              data.failed +
-                              " falhas.",
-                          );
-                      }}
+                      onClick={() =>
+                        openNotifications({
+                          category: n.category.toLowerCase().includes("promo")
+                            ? "promocao"
+                            : "comunicado",
+                          title: n.title.slice(0, 80),
+                          body: n.body.slice(0, 240),
+                        })
+                      }
                     >
                       <Bell size={16} /> Notificar
                     </button>
@@ -759,6 +798,22 @@ export default function Community({
           )}
         </>
       )}
+      {section === "Notificações" && (
+        <Notifications
+          db={db}
+          profile={profile}
+          session={session}
+          demo={demo}
+          notify={notify}
+          online={online}
+          Select={Select}
+          enablePush={enablePush}
+          intent={notificationIntent}
+          people={people}
+          payments={payments}
+          onPeopleReload={load}
+        />
+      )}
       {form && (
         <div className="modal-backdrop" onClick={() => !busy && setForm(null)}>
           <section
@@ -784,7 +839,7 @@ export default function Community({
                     ? "Pix da comunidade"
                     : "Registrar contribuição"}
             </h2>
-            <form onSubmit={submit}>
+            <ResponsiveForm onSubmit={submit}>
               {form === "person" && (
                 <>
                   <label>
@@ -916,10 +971,10 @@ export default function Community({
                       <Select
                         value={
                           people.find((p) => p.id === personId)?.name ||
-                          "N?o vinculado"
+                          "Não vinculado"
                         }
                         options={[
-                          "N?o vinculado",
+                          "Não vinculado",
                           ...people.map((p) => p.name),
                         ]}
                         onChange={(name) =>
@@ -949,7 +1004,7 @@ export default function Community({
               <button className="primary full" disabled={busy}>
                 {busy ? "Salvando…" : "Salvar registro"}
               </button>
-            </form>
+            </ResponsiveForm>
           </section>
         </div>
       )}

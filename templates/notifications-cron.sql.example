@@ -1,0 +1,18 @@
+-- Configurar somente no projeto Supabase dedicado, após a migração 004.
+-- Habilitar pg_cron e pg_net pelo Dashboard.
+-- Criar no Vault:
+--   capela_project_url = URL HTTPS do projeto
+--   capela_notification_cron_secret = segredo aleatório com pelo menos 32 caracteres
+-- Configurar a MESMA chave como NOTIFICATION_CRON_SECRET na Edge Function.
+-- Nunca colocar esses valores no GitHub ou em variáveis VITE.
+-- Este job processa somente avisos já revisados e colocados na fila pelo app.
+select cron.schedule(
+ 'capela-notifications-queue',
+ '* * * * *',
+ $$select net.http_post(
+   url := (select decrypted_secret from vault.decrypted_secrets where name='capela_project_url') || '/functions/v1/send-push',
+   headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select decrypted_secret from vault.decrypted_secrets where name='capela_notification_cron_secret')),
+   body := '{"mode":"scheduled"}'::jsonb,
+   timeout_milliseconds := 120000
+ ) as request_id;$$
+);
