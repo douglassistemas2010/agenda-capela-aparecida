@@ -34,8 +34,9 @@ export default function Community({
   notify,
   online,
   Select,
+  initialSection = "Visão geral",
 }) {
-  const [section, setSection] = useState("Visão geral"),
+  const [section, setSection] = useState(initialSection),
     [people, setPeople] = useState([]),
     [payments, setPayments] = useState([]),
     [notices, setNotices] = useState([]),
@@ -332,20 +333,27 @@ export default function Community({
         <div>
           <p className="eyebrow">FÉ QUE SE TRANSFORMA EM CUIDADO</p>
           <h1>
-            Nossa comunidade<span className="greeting-dot">.</span>
+            {profile?.role === "dizimista" ? "Meu dízimo" : "Nossa comunidade"}
+            <span className="greeting-dot">.</span>
           </h1>
-          <p>Generosidade, encontros e vida em comunhão.</p>
+          <p>
+            {profile?.role === "dizimista"
+              ? "Sua partilha, seu histórico e nossa comunidade."
+              : "Generosidade, encontros e vida em comunhão."}
+          </p>
         </div>
-        <button
-          className="secondary"
-          onClick={() => setSection("Notificações")}
-        >
-          <Bell size={17} /> Notificações
-        </button>
+        {profile?.role !== "dizimista" && (
+          <button
+            className="secondary"
+            onClick={() => setSection("Notificações")}
+          >
+            <Bell size={17} /> Notificações
+          </button>
+        )}
       </section>
       <div className="community-tabs">
         {[
-          "Visão geral",
+          ...(profile?.role === "dizimista" ? [] : ["Visão geral"]),
           "Contribuir",
           ...(finance ? ["Dizimistas", "Financeiro"] : []),
           "Mural",

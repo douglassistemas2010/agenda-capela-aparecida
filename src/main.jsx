@@ -33,6 +33,8 @@ import Community from "./community";
 import { roles, roleKeys, roleLabel, canOrganize } from "./roles";
 import { owner, loginEmail } from "./owner";
 import WeekendCard from "./WeekendCard";
+import DizimistaHome from "./DizimistaHome";
+import "./dizimista.css";
 const localPreview =
   window.location.protocol === "file:" ||
   window.location.pathname.toUpperCase().endsWith("/PREVIA-APP.HTML");
@@ -165,7 +167,11 @@ function App() {
     [members, setMembers] = useState([]),
     [loading, setLoading] = useState(configured);
   const [previewRole, setPreviewRole] = useState("admin");
+  const [communityEntry, setCommunityEntry] = useState("Contribuir");
   const effectiveRole = !configured ? previewRole : profile?.role;
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [tab, communityEntry, effectiveRole]);
   const effectiveProfile = !configured
     ? { role: previewRole, approved: true }
     : profile;
@@ -437,10 +443,19 @@ function App() {
           <button
             key={t}
             className={tab === t ? "active" : ""}
-            onClick={() => setTab(t)}
+            onClick={() => {
+              setTab(t);
+              if (effectiveRole === "dizimista" && t === "Agenda")
+                setView("Dia");
+              if (t === "Comunidade") setCommunityEntry("Contribuir");
+            }}
           >
             <I size={21} />
-            <span>{t}</span>
+            <span>
+              {effectiveRole === "dizimista" && t === "Comunidade"
+                ? "Meu dízimo"
+                : t}
+            </span>
           </button>
         ))}
     </>
@@ -582,8 +597,9 @@ function App() {
             <div className="notice">
               <ShieldCheck size={17} />
               <span>
-                Prévia do Administrador Douglas · dados ilustrativos. Reservas e
-                login serão liberados após ativar o banco online.
+                {effectiveRole === "dizimista"
+                  ? "Demonstração · dados ilustrativos. Nenhuma contribuição será registrada."
+                  : "Demonstração do portal · dados ilustrativos. Ative o banco para usar dados reais."}
               </span>
               <button onClick={() => setModal({ kind: "auth", mode: "login" })}>
                 Entrar
@@ -624,7 +640,28 @@ function App() {
             </section>
           ) : (
             <>
-              {tab === "Início" && (
+              {tab === "Início" && effectiveRole === "dizimista" && (
+                <DizimistaHome
+                  name={demo ? "Dizimista" : name}
+                  events={events}
+                  reflection={reflection}
+                  onContribute={() => {
+                    setCommunityEntry("Contribuir");
+                    setTab("Comunidade");
+                  }}
+                  onNotices={() => {
+                    setCommunityEntry("Mural");
+                    setTab("Comunidade");
+                  }}
+                  onAgenda={(day) => {
+                    if (day) setDate(parseDay(day));
+                    setView("Dia");
+                    setTab("Agenda");
+                  }}
+                  onEvent={(event) => setModal({ kind: "detail", event })}
+                />
+              )}
+              {tab === "Início" && effectiveRole !== "dizimista" && (
                 <>
                   <section className="page-heading">
                     <div>
@@ -644,9 +681,11 @@ function App() {
                         encontros?
                       </p>
                     </div>
-                    <button className="primary" onClick={newEvent}>
-                      <Plus size={19} /> Nova reserva
-                    </button>
+                    {effectiveRole !== "dizimista" && (
+                      <button className="primary" onClick={newEvent}>
+                        <Plus size={19} /> Nova reserva
+                      </button>
+                    )}
                   </section>
                   <div className="home-spotlight">
                     <section className="reflection">
@@ -894,9 +933,11 @@ function App() {
                       </h1>
                       <p>Organize hoje os momentos que vão nos reunir.</p>
                     </div>
-                    <button className="primary" onClick={newEvent}>
-                      <Plus size={19} /> Nova reserva
-                    </button>
+                    {effectiveRole !== "dizimista" && (
+                      <button className="primary" onClick={newEvent}>
+                        <Plus size={19} /> Nova reserva
+                      </button>
+                    )}
                   </section>
                   <section className="agenda-panel">
                     <div className="agenda-toolbar">
@@ -1030,7 +1071,12 @@ function App() {
               {tab === "Comunidade" && (
                 <Community
                   db={db}
-                  key={effectiveRole}
+                  key={effectiveRole + communityEntry}
+                  initialSection={
+                    effectiveRole === "dizimista"
+                      ? communityEntry
+                      : "Visão geral"
+                  }
                   profile={effectiveProfile}
                   session={session}
                   demo={demo}

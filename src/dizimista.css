@@ -1,0 +1,502 @@
+/* Composição do app: independente das grades e densidade do portal. */
+.dizimista-app .day-group {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 16px 0;
+}
+.dizimista-app .agenda-days {
+  padding: 0 16px;
+}
+.dizimista-app .event-card {
+  min-width: 0;
+  gap: 10px;
+  padding: 14px 12px;
+}
+.dizimista-app .event-body {
+  min-width: 0;
+}
+.dizimista-app .event-body h3 {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.dizimista-app .event-body p {
+  flex-wrap: wrap;
+  font-size: 0.8125rem;
+}
+.dizimista-app .white-card > p,
+.dizimista-app .white-card > small {
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.dizimista-app .white-card label {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+body:has(.dizimista-app) {
+  padding-bottom: 0;
+  background: #e9eef5;
+}
+.dizimista-app {
+  --muted: #61718a;
+  background: #f6f8fc;
+  color: #203654;
+  box-shadow: 0 0 60px #20365409;
+  font-size: 1rem;
+}
+.dizimista-app header {
+  height: auto;
+  min-height: 76px;
+  flex-wrap: nowrap;
+  padding: 16px 20px;
+  background: #ffffffed;
+}
+.dizimista-app .header-title {
+  min-width: 0;
+  gap: 10px;
+}
+.dizimista-app .header-title > .header-emblem {
+  display: grid;
+  width: 32px;
+  height: 38px;
+  margin: 0;
+  flex-shrink: 0;
+}
+.dizimista-app .header-title > div > b {
+  font-size: 0.875rem;
+  letter-spacing: -0.2px;
+  line-height: 1.4;
+}
+.dizimista-app .header-title > div > small {
+  font-size: 0.6875rem;
+  letter-spacing: 0.6px;
+  margin-top: 3px;
+}
+.dizimista-app .header-title::before,
+.dizimista-app .profile > span:not(.avatar) {
+  display: none;
+}
+.dizimista-app .header-actions {
+  flex-shrink: 0;
+}
+.dizimista-app .profile {
+  padding: 4px;
+  min-height: 44px;
+}
+.dizimista-app main {
+  padding: 16px 20px calc(108px + env(safe-area-inset-bottom));
+}
+.dizimista-app .preview-profile {
+  padding: 10px 12px;
+  border: 1px dashed #ced8e6;
+  border-radius: 12px;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 0.75rem;
+  color: #61718a;
+}
+.dizimista-app .preview-profile select {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+  min-height: 40px;
+  padding: 8px;
+}
+.dizimista-app .preview-profile small {
+  display: none;
+}
+.dizimista-app .notice {
+  font-size: 0.75rem;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.faith-home {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.faith-welcome {
+  padding: 4px 0 2px;
+}
+.faith-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #6b7d96;
+  line-height: 1.5;
+}
+.faith-welcome h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  margin: 8px 0 6px;
+  overflow-wrap: anywhere;
+}
+.faith-welcome > p:last-child {
+  font-size: 0.9375rem;
+  color: #61718a;
+}
+.faith-giving {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 14px 12px;
+  padding: 22px;
+  border-radius: 22px;
+  background: #173d73;
+  color: white;
+  box-shadow: 0 8px 24px #173d7314;
+}
+.faith-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  color: #b89551;
+  background: #f6f0e3;
+}
+.faith-giving .faith-icon {
+  background: #ffffff12;
+  color: #eed4a0;
+}
+.faith-giving h2 {
+  color: white;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: -0.2px;
+}
+.faith-giving p {
+  color: #d6e1f1;
+  font-size: 0.875rem;
+  margin-top: 5px;
+  line-height: 1.65;
+}
+.faith-giving .primary {
+  grid-column: 1/-1;
+  width: 100%;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: 13px;
+  background: #eddbb4;
+  color: #3f3521;
+  font-size: 0.9375rem;
+  font-weight: 650;
+  box-shadow: none;
+}
+.faith-history {
+  grid-column: 1/-1;
+  color: #e1e9f6;
+  font-size: 0.8125rem;
+  min-height: 44px;
+  margin-top: -10px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.dizimista-app .weekend-card {
+  padding: 20px;
+  border-radius: 20px;
+  background: white;
+  border: 1px solid #e4e9f1;
+  box-shadow: none;
+}
+.dizimista-app .weekend-heading .eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.8px;
+}
+.dizimista-app .weekend-card h2 {
+  font-size: 1.125rem;
+  margin: 12px 0;
+  line-height: 1.4;
+}
+.dizimista-app .weekend-schedule {
+  font-size: 0.875rem;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.dizimista-app .weekend-card > p {
+  font-size: 0.875rem;
+  max-width: none;
+  color: #61718a;
+}
+.dizimista-app .weekend-card > .text-button {
+  min-height: 44px;
+  font-size: 0.8125rem;
+  padding-top: 10px;
+}
+.faith-reflection {
+  padding: 4px 4px 8px;
+}
+.faith-reflection .faith-kicker {
+  color: #8f7541;
+}
+.faith-reflection h2 {
+  font-size: 1.125rem;
+  line-height: 1.55;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  margin: 12px 0 8px;
+}
+.faith-reflection > p {
+  font-size: 0.9375rem;
+  color: #526780;
+  line-height: 1.8;
+}
+.faith-reflection > small {
+  display: block;
+  color: #718198;
+  font-size: 0.75rem;
+  margin-top: 12px;
+  line-height: 1.6;
+}
+.faith-section-title {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.faith-section-title h2 {
+  font-size: 1rem;
+  font-weight: 650;
+}
+.faith-section-title button {
+  font-size: 0.8125rem;
+  min-height: 44px;
+  color: #315d91;
+  flex-shrink: 0;
+}
+.faith-event {
+  width: 100%;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  text-align: left;
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1px solid #e4e9f1;
+  background: white;
+  border-radius: 17px;
+}
+.faith-date {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  width: 48px;
+  min-height: 58px;
+  flex-shrink: 0;
+  background: #f0f4fa;
+  border-radius: 12px;
+}
+.faith-date b {
+  font-size: 1.25rem;
+  font-weight: 650;
+}
+.faith-date small {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+.faith-event-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+.faith-event-copy > small {
+  color: #718198;
+  font-size: 0.75rem;
+}
+.faith-event-copy > b {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.faith-event-copy > span {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  font-size: 0.8125rem;
+  color: #61718a;
+}
+.faith-empty {
+  font-size: 0.875rem;
+  padding: 20px;
+  border: 1px dashed #ced8e6;
+  border-radius: 16px;
+  color: #61718a;
+}
+.faith-notices {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  text-align: left;
+  background: #eef2f8;
+  padding: 18px;
+  border-radius: 18px;
+}
+.faith-notices b {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.faith-notices small {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.8125rem;
+  color: #61718a;
+}
+.dizimista-app .bottom-nav {
+  padding: 8px 12px;
+  height: 72px;
+  border: 1px solid #e0e7f1;
+  box-shadow: 0 4px 24px #23457412;
+}
+.dizimista-app .bottom-nav > button {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.75rem;
+  padding: 8px;
+  border-radius: 12px;
+  color: #718198;
+}
+.dizimista-app .bottom-nav > button > span {
+  font-size: 0.75rem;
+}
+.dizimista-app .bottom-nav > button.active {
+  background: #eef3fa;
+  color: #214f87;
+}
+.dizimista-app .bottom-nav > button.active::before {
+  display: none;
+}
+.dizimista-app .bottom-nav > button:last-child svg {
+  background: none;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+}
+.dizimista-app .page-heading {
+  margin: 6px 0 20px;
+}
+.dizimista-app .page-heading h1 {
+  font-size: 1.625rem;
+  line-height: 1.3;
+  letter-spacing: -0.6px;
+  margin-bottom: 8px;
+}
+.dizimista-app .page-heading p:not(.eyebrow) {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  max-width: none;
+}
+.dizimista-app .eyebrow {
+  font-size: 0.6875rem;
+  letter-spacing: 0.8px;
+}
+.dizimista-app .community-tabs {
+  gap: 6px;
+  margin: 0 0 20px;
+  padding: 4px;
+  border-radius: 13px;
+  background: #eaf0f7;
+}
+.dizimista-app .community-tabs button {
+  flex: 1;
+  padding: 10px 8px;
+  min-height: 44px;
+  font-size: 0.8125rem;
+  border: 0;
+  background: transparent;
+}
+.dizimista-app .community-tabs .selected {
+  background: white;
+  color: #214f87;
+  box-shadow: 0 1px 4px #214f8710;
+}
+.dizimista-app .white-card {
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid #e4e9f1;
+  box-shadow: none;
+  min-width: 0;
+}
+.dizimista-app .white-card h3 {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.dizimista-app .community-grid {
+  gap: 16px;
+}
+.dizimista-app .primary,
+.dizimista-app .secondary {
+  min-height: 46px;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  justify-content: center;
+  white-space: normal;
+}
+.dizimista-app .agenda-toolbar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 16px;
+}
+.dizimista-app .date-controls {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.dizimista-app .date-controls h2 {
+  font-size: 0.9375rem;
+}
+.dizimista-app .filter-row {
+  flex-wrap: wrap;
+  padding: 0 16px 16px;
+}
+.dizimista-app .filter-row .search {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.dizimista-app .filter-row > .custom-select {
+  flex: 1;
+}
+.dizimista-app .week-grid {
+  overflow-x: auto;
+}
+.dizimista-app .toast {
+  max-width: calc(100% - 32px);
+  width: 420px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  bottom: calc(100px + env(safe-area-inset-bottom));
+}
+@media (max-width: 359px) {
+  .dizimista-app main {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .dizimista-app header {
+    padding: 14px;
+  }
+  .faith-giving {
+    padding: 18px;
+  }
+  .faith-section-title {
+    flex-wrap: wrap;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .faith-home {
+    animation: arrive 0.22s ease-out;
+  }
+  .faith-event:active,
+  .faith-notices:active {
+    transform: scale(0.99);
+  }
+}

@@ -1,5 +1,11 @@
 # Perfis atuais — 25/11/2026
 
+## Revisão da experiência Dizimista
+
+Início próprio em `DizimistaHome.jsx`: saudação curta, contribuição em destaque, celebração do fim de semana, reflexão, até três próximos encontros e acesso aos avisos. A página não reutiliza estatísticas administrativas nem calendário lateral do portal. Navegação inferior: Início, Agenda e Meu dízimo; este último abre diretamente Contribuir, com histórico e abas de mural/notificações. Os botões de nova reserva ficam fora da experiência Dizimista. Agenda abre na visão Dia ao usar a navegação inferior. A troca de tela volta ao topo.
+
+Estilos em `dizimista.css`, aplicados apenas à visão Dizimista: coluna única também na agenda, cabeçalho compacto, fontes e contraste consistentes, cards com espaçamento de 20px, botões de toque, navegação com área segura e regras para telas a partir de 320px. A revisão é de implementação; inspeção visual no navegador e testes em aparelhos continuam pendentes por limitação da ferramenta de acesso ao navegador. Testes funcionais existentes e build aprovados.
+
 Três perfis substituem a divisão anterior por conselhos:
 
 | Perfil | Canal e experiência | Permissões |
