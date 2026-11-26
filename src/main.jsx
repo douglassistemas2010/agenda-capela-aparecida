@@ -179,8 +179,13 @@ function App() {
     canWrite = !demo && canOrganize(profile?.role) && profile?.approved,
     admin = profile?.role === "admin" && profile?.approved;
   const notify = (m) => setToast(m);
-  async function load() {
+  async function load(role = profile?.role) {
     if (!db) return;
+    if (!canOrganize(role)) {
+      setEvents([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const { data, error } = await db
@@ -234,7 +239,7 @@ function App() {
         if (!active) return;
         if (error) notify(error.message);
         setProfile(data);
-        if (data?.approved) load();
+        if (data?.approved) load(data.role);
         else setLoading(false);
       });
     return () => {
@@ -436,15 +441,31 @@ function App() {
         ["Início", House],
         ["Agenda", CalendarDays],
         ["Comunidade", Heart],
+        ...(effectiveRole === "dizimista" ? [["Avisos", BookOpen]] : []),
         ["Pessoas", Users],
       ]
         .filter(([t]) => t !== "Pessoas" || effectiveRole === "admin")
+        .filter(([t]) => t !== "Agenda" || effectiveRole !== "dizimista")
         .map(([t, I]) => (
           <button
             key={t}
-            className={tab === t ? "active" : ""}
+            className={
+              (
+                t === "Avisos"
+                  ? tab === "Comunidade" && communityEntry === "Mural"
+                  : tab === t &&
+                    !(
+                      effectiveRole === "dizimista" &&
+                      t === "Comunidade" &&
+                      communityEntry === "Mural"
+                    )
+              )
+                ? "active"
+                : ""
+            }
             onClick={() => {
-              setTab(t);
+              setTab(t === "Avisos" ? "Comunidade" : t);
+              if (t === "Avisos") setCommunityEntry("Mural");
               if (effectiveRole === "dizimista" && t === "Agenda")
                 setView("Dia");
               if (t === "Comunidade") setCommunityEntry("Contribuir");
@@ -643,7 +664,6 @@ function App() {
               {tab === "Início" && effectiveRole === "dizimista" && (
                 <DizimistaHome
                   name={demo ? "Dizimista" : name}
-                  events={events}
                   reflection={reflection}
                   onContribute={() => {
                     setCommunityEntry("Contribuir");
@@ -653,12 +673,6 @@ function App() {
                     setCommunityEntry("Mural");
                     setTab("Comunidade");
                   }}
-                  onAgenda={(day) => {
-                    if (day) setDate(parseDay(day));
-                    setView("Dia");
-                    setTab("Agenda");
-                  }}
-                  onEvent={(event) => setModal({ kind: "detail", event })}
                 />
               )}
               {tab === "Início" && effectiveRole !== "dizimista" && (
@@ -923,7 +937,7 @@ function App() {
                   </div>
                 </>
               )}
-              {tab === "Agenda" && (
+              {tab === "Agenda" && effectiveRole !== "dizimista" && (
                 <>
                   <section className="page-heading">
                     <div>
@@ -1186,399 +1200,417 @@ function App() {
       </div>
       <nav className="bottom-nav">
         <Nav />
-        <button onClick={newEvent}>
-          <Plus size={22} />
-          <span>Reservar</span>
-        </button>
+        {effectiveRole !== "dizimista" && (
+          <button onClick={newEvent}>
+            <Plus size={22} />
+            <span>Reservar</span>
+          </button>
+        )}
       </nav>
-      {modal && (
-        <div className="modal-backdrop" onClick={() => !busy && setModal(null)}>
-          <section
-            className="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label={modal.kind === "event" ? "Reserva" : "Detalhes"}
-            onClick={(e) => e.stopPropagation()}
+      {modal &&
+        !(
+          effectiveRole === "dizimista" &&
+          ["event", "detail"].includes(modal.kind)
+        ) && (
+          <div
+            className="modal-backdrop"
+            onClick={() => !busy && setModal(null)}
           >
-            <button
-              className="close icon-btn"
-              aria-label="Fechar"
-              onClick={() => setModal(null)}
+            <section
+              className="modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label={modal.kind === "event" ? "Reserva" : "Detalhes"}
+              onClick={(e) => e.stopPropagation()}
             >
-              <X />
-            </button>
-            {modal.kind === "auth" && (
-              <>
-                <span className="modal-icon">
-                  <Church />
-                </span>
-                <h2>
-                  {modal.mode === "signup"
-                    ? "Faça parte da comunidade"
-                    : modal.mode === "reset"
-                      ? "Recupere seu acesso"
-                      : "Bem-vindo à nossa comunidade"}
-                </h2>
-                <p className="muted">
-                  {demo
-                    ? "A autenticação ainda precisa ser ativada."
-                    : "Use sua conta para acessar a agenda da capela."}
-                </p>
-                <form onSubmit={auth}>
-                  {modal.mode === "signup" && (
+              <button
+                className="close icon-btn"
+                aria-label="Fechar"
+                onClick={() => setModal(null)}
+              >
+                <X />
+              </button>
+              {modal.kind === "auth" && (
+                <>
+                  <span className="modal-icon">
+                    <Church />
+                  </span>
+                  <h2>
+                    {modal.mode === "signup"
+                      ? "Faça parte da comunidade"
+                      : modal.mode === "reset"
+                        ? "Recupere seu acesso"
+                        : "Bem-vindo à nossa comunidade"}
+                  </h2>
+                  <p className="muted">
+                    {demo
+                      ? "A autenticação ainda precisa ser ativada."
+                      : "Use sua conta para acessar a agenda da capela."}
+                  </p>
+                  <form onSubmit={auth}>
+                    {modal.mode === "signup" && (
+                      <label>
+                        Seu nome
+                        <input
+                          name="name"
+                          required
+                          autoComplete="name"
+                          maxLength={100}
+                        />
+                      </label>
+                    )}
                     <label>
-                      Seu nome
+                      {modal.mode === "signup" ? "E-mail" : "E-mail ou usuário"}
                       <input
-                        name="name"
+                        name="email"
+                        type={modal.mode === "signup" ? "email" : "text"}
                         required
-                        autoComplete="name"
-                        maxLength={100}
-                      />
-                    </label>
-                  )}
-                  <label>
-                    {modal.mode === "signup" ? "E-mail" : "E-mail ou usuário"}
-                    <input
-                      name="email"
-                      type={modal.mode === "signup" ? "email" : "text"}
-                      required
-                      autoComplete={
-                        modal.mode === "signup" ? "email" : "username"
-                      }
-                      autoCapitalize="none"
-                      spellCheck={false}
-                      placeholder={
-                        modal.mode === "signup"
-                          ? "seu@email.com"
-                          : "E-mail ou douglas"
-                      }
-                    />
-                  </label>
-                  {modal.mode !== "reset" && (
-                    <label>
-                      Senha
-                      <input
-                        name="password"
-                        type="password"
-                        required
-                        minLength={8}
                         autoComplete={
+                          modal.mode === "signup" ? "email" : "username"
+                        }
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        placeholder={
                           modal.mode === "signup"
-                            ? "new-password"
-                            : "current-password"
+                            ? "seu@email.com"
+                            : "E-mail ou douglas"
                         }
                       />
                     </label>
-                  )}
-                  <button className="primary full" disabled={busy || demo}>
-                    {busy
-                      ? "Aguarde…"
-                      : modal.mode === "signup"
-                        ? "Criar cadastro"
-                        : modal.mode === "reset"
-                          ? "Enviar recuperação"
-                          : "Entrar"}
-                  </button>
-                </form>
-                {modal.mode === "login" && (
-                  <>
-                    <button
-                      className="text-button full"
-                      onClick={() => setModal({ ...modal, mode: "reset" })}
-                    >
-                      Esqueci minha senha
-                    </button>
-                    <div className="divider">ou continue com</div>
-                    <div className="oauth">
-                      <button
-                        className="secondary"
-                        onClick={() => oauth("google")}
-                      >
-                        Google
-                      </button>
-                      <button
-                        className="secondary"
-                        onClick={() => oauth("apple")}
-                      >
-                        Apple
-                      </button>
-                    </div>
-                  </>
-                )}
-                <button
-                  className="text-button full"
-                  onClick={() =>
-                    setModal({
-                      ...modal,
-                      mode: modal.mode === "signup" ? "login" : "signup",
-                    })
-                  }
-                >
-                  {modal.mode === "signup"
-                    ? "Já tenho uma conta"
-                    : "Criar meu cadastro"}
-                </button>
-                <small className="muted">
-                  Novos cadastros precisam da aprovação do administrador.
-                </small>
-              </>
-            )}
-            {modal.kind === "event" && (
-              <>
-                <p className="eyebrow">AGENDA DA COMUNIDADE</p>
-                <h2>
-                  {modal.event.id ? "Editar reserva" : "Um novo encontro"}
-                </h2>
-                <ResponsiveForm onSubmit={save}>
-                  <label>
-                    Nome do encontro ou dos noivos
-                    <input
-                      name="title"
-                      required
-                      maxLength={150}
-                      defaultValue={modal.event.title}
-                      placeholder="Ex.: Maria & José"
-                    />
-                  </label>
-                  <label>
-                    Tipo de encontro
-                    <CustomSelect
-                      value={modal.event.type}
-                      options={types}
-                      onChange={(type) =>
-                        setModal({ ...modal, event: { ...modal.event, type } })
-                      }
-                    />
-                    <input type="hidden" name="type" value={modal.event.type} />
-                  </label>
-                  <DateField
-                    name="date"
-                    label="Data"
-                    value={modal.event.date}
-                    onChange={(value) =>
-                      setModal({
-                        ...modal,
-                        event: { ...modal.event, date: value },
-                      })
-                    }
-                  />
-                  <div className="form-row">
-                    <TimeField
-                      name="start_time"
-                      label="Início"
-                      value={modal.event.start_time}
-                      onChange={(v) =>
-                        setModal({
-                          ...modal,
-                          event: { ...modal.event, start_time: v },
-                        })
-                      }
-                    />
-                    <TimeField
-                      name="end_time"
-                      label="Término"
-                      value={modal.event.end_time}
-                      onChange={(v) =>
-                        setModal({
-                          ...modal,
-                          event: { ...modal.event, end_time: v },
-                        })
-                      }
-                    />
-                  </div>
-                  {modal.event.type === "Casamento" && (
-                    <div className="fee-box">
-                      <label className="checkbox">
+                    {modal.mode !== "reset" && (
+                      <label>
+                        Senha
                         <input
-                          type="checkbox"
-                          name="contributor"
-                          checked={!!modal.event.contributor}
-                          onChange={(e) =>
-                            setModal({
-                              ...modal,
-                              event: {
-                                ...modal.event,
-                                contributor: e.target.checked,
-                              },
-                            })
+                          name="password"
+                          type="password"
+                          required
+                          minLength={8}
+                          autoComplete={
+                            modal.mode === "signup"
+                              ? "new-password"
+                              : "current-password"
                           }
                         />
-                        <span className="check-visual">
-                          {modal.event.contributor && <Check size={15} />}
-                        </span>
-                        Contribuinte do dízimo na comunidade
                       </label>
+                    )}
+                    <button className="primary full" disabled={busy || demo}>
+                      {busy
+                        ? "Aguarde…"
+                        : modal.mode === "signup"
+                          ? "Criar cadastro"
+                          : modal.mode === "reset"
+                            ? "Enviar recuperação"
+                            : "Entrar"}
+                    </button>
+                  </form>
+                  {modal.mode === "login" && (
+                    <>
+                      <button
+                        className="text-button full"
+                        onClick={() => setModal({ ...modal, mode: "reset" })}
+                      >
+                        Esqueci minha senha
+                      </button>
+                      <div className="divider">ou continue com</div>
+                      <div className="oauth">
+                        <button
+                          className="secondary"
+                          onClick={() => oauth("google")}
+                        >
+                          Google
+                        </button>
+                        <button
+                          className="secondary"
+                          onClick={() => oauth("apple")}
+                        >
+                          Apple
+                        </button>
+                      </div>
+                    </>
+                  )}
+                  <button
+                    className="text-button full"
+                    onClick={() =>
+                      setModal({
+                        ...modal,
+                        mode: modal.mode === "signup" ? "login" : "signup",
+                      })
+                    }
+                  >
+                    {modal.mode === "signup"
+                      ? "Já tenho uma conta"
+                      : "Criar meu cadastro"}
+                  </button>
+                  <small className="muted">
+                    Novos cadastros precisam da aprovação do administrador.
+                  </small>
+                </>
+              )}
+              {modal.kind === "event" && (
+                <>
+                  <p className="eyebrow">AGENDA DA COMUNIDADE</p>
+                  <h2>
+                    {modal.event.id ? "Editar reserva" : "Um novo encontro"}
+                  </h2>
+                  <ResponsiveForm onSubmit={save}>
+                    <label>
+                      Nome do encontro ou dos noivos
+                      <input
+                        name="title"
+                        required
+                        maxLength={150}
+                        defaultValue={modal.event.title}
+                        placeholder="Ex.: Maria & José"
+                      />
+                    </label>
+                    <label>
+                      Tipo de encontro
+                      <CustomSelect
+                        value={modal.event.type}
+                        options={types}
+                        onChange={(type) =>
+                          setModal({
+                            ...modal,
+                            event: { ...modal.event, type },
+                          })
+                        }
+                      />
+                      <input
+                        type="hidden"
+                        name="type"
+                        value={modal.event.type}
+                      />
+                    </label>
+                    <DateField
+                      name="date"
+                      label="Data"
+                      value={modal.event.date}
+                      onChange={(value) =>
+                        setModal({
+                          ...modal,
+                          event: { ...modal.event, date: value },
+                        })
+                      }
+                    />
+                    <div className="form-row">
+                      <TimeField
+                        name="start_time"
+                        label="Início"
+                        value={modal.event.start_time}
+                        onChange={(v) =>
+                          setModal({
+                            ...modal,
+                            event: { ...modal.event, start_time: v },
+                          })
+                        }
+                      />
+                      <TimeField
+                        name="end_time"
+                        label="Término"
+                        value={modal.event.end_time}
+                        onChange={(v) =>
+                          setModal({
+                            ...modal,
+                            event: { ...modal.event, end_time: v },
+                          })
+                        }
+                      />
+                    </div>
+                    {modal.event.type === "Casamento" && (
+                      <div className="fee-box">
+                        <label className="checkbox">
+                          <input
+                            type="checkbox"
+                            name="contributor"
+                            checked={!!modal.event.contributor}
+                            onChange={(e) =>
+                              setModal({
+                                ...modal,
+                                event: {
+                                  ...modal.event,
+                                  contributor: e.target.checked,
+                                },
+                              })
+                            }
+                          />
+                          <span className="check-visual">
+                            {modal.event.contributor && <Check size={15} />}
+                          </span>
+                          Contribuinte do dízimo na comunidade
+                        </label>
+                        <p>
+                          Taxa do casamento{" "}
+                          <b>
+                            {money(fee("Casamento", modal.event.contributor))}
+                          </b>
+                        </p>
+                        <small>
+                          R$ 150 para contribuintes · R$ 350 para não
+                          contribuintes
+                        </small>
+                      </div>
+                    )}
+                    <label>
+                      Contato{" "}
+                      <span className="muted">(opcional, acesso interno)</span>
+                      <input
+                        name="contact"
+                        maxLength={150}
+                        defaultValue={modal.event.contact}
+                      />
+                    </label>
+                    <label>
+                      Observações internas
+                      <textarea
+                        name="notes"
+                        maxLength={2000}
+                        defaultValue={modal.event.notes}
+                        rows={3}
+                      />
+                    </label>
+                    <label>
+                      Situação
+                      <CustomSelect
+                        value={modal.event.status}
+                        options={["Confirmado", "Pendente", "Cancelado"]}
+                        onChange={(status) =>
+                          setModal({
+                            ...modal,
+                            event: { ...modal.event, status },
+                          })
+                        }
+                      />
+                      <input
+                        type="hidden"
+                        name="status"
+                        value={modal.event.status}
+                      />
+                    </label>
+                    <button className="primary full" disabled={busy || !online}>
+                      {busy ? "Salvando…" : "Salvar reserva"}
+                    </button>
+                  </ResponsiveForm>
+                </>
+              )}
+              {modal.kind === "detail" && (
+                <>
+                  <span className="tag">{modal.event.type}</span>
+                  <h2>{modal.event.title}</h2>
+                  <div className="detail-line">
+                    <CalendarDays />
+                    {fmt(parseDay(modal.event.date), {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  </div>
+                  <div className="detail-line">
+                    <Clock />
+                    {modal.event.start_time.slice(0, 5)} –{" "}
+                    {modal.event.end_time.slice(0, 5)}
+                  </div>
+                  <div className="detail-line">
+                    <MapPin />
+                    Capela Nossa Senhora Aparecida
+                  </div>
+                  <span className="tag">{modal.event.status}</span>
+                  {modal.event.type === "Casamento" && (
+                    <div className="fee-box">
                       <p>
-                        Taxa do casamento{" "}
-                        <b>
-                          {money(fee("Casamento", modal.event.contributor))}
-                        </b>
+                        Taxa do casamento <b>{money(modal.event.amount)}</b>
                       </p>
                       <small>
-                        R$ 150 para contribuintes · R$ 350 para não
-                        contribuintes
+                        {modal.event.contributor
+                          ? "Contribuinte do dízimo"
+                          : "Não contribuinte do dízimo"}
                       </small>
                     </div>
                   )}
-                  <label>
-                    Contato{" "}
-                    <span className="muted">(opcional, acesso interno)</span>
-                    <input
-                      name="contact"
-                      maxLength={150}
-                      defaultValue={modal.event.contact}
-                    />
-                  </label>
-                  <label>
-                    Observações internas
-                    <textarea
-                      name="notes"
-                      maxLength={2000}
-                      defaultValue={modal.event.notes}
-                      rows={3}
-                    />
-                  </label>
-                  <label>
-                    Situação
-                    <CustomSelect
-                      value={modal.event.status}
-                      options={["Confirmado", "Pendente", "Cancelado"]}
-                      onChange={(status) =>
-                        setModal({
-                          ...modal,
-                          event: { ...modal.event, status },
-                        })
-                      }
-                    />
-                    <input
-                      type="hidden"
-                      name="status"
-                      value={modal.event.status}
-                    />
-                  </label>
-                  <button className="primary full" disabled={busy || !online}>
-                    {busy ? "Salvando…" : "Salvar reserva"}
-                  </button>
-                </ResponsiveForm>
-              </>
-            )}
-            {modal.kind === "detail" && (
-              <>
-                <span className="tag">{modal.event.type}</span>
-                <h2>{modal.event.title}</h2>
-                <div className="detail-line">
-                  <CalendarDays />
-                  {fmt(parseDay(modal.event.date), {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </div>
-                <div className="detail-line">
-                  <Clock />
-                  {modal.event.start_time.slice(0, 5)} –{" "}
-                  {modal.event.end_time.slice(0, 5)}
-                </div>
-                <div className="detail-line">
-                  <MapPin />
-                  Capela Nossa Senhora Aparecida
-                </div>
-                <span className="tag">{modal.event.status}</span>
-                {modal.event.type === "Casamento" && (
-                  <div className="fee-box">
-                    <p>
-                      Taxa do casamento <b>{money(modal.event.amount)}</b>
-                    </p>
-                    <small>
-                      {modal.event.contributor
-                        ? "Contribuinte do dízimo"
-                        : "Não contribuinte do dízimo"}
-                    </small>
-                  </div>
-                )}
-                {modal.event.contact && <p>Contato: {modal.event.contact}</p>}
-                {modal.event.notes && (
-                  <p className="notes">{modal.event.notes}</p>
-                )}
-                <p className="audit">
-                  Registrado por <b>{modal.event.creator_name}</b>
-                  <br />
-                  {new Date(modal.event.created_at).toLocaleString("pt-BR")}
-                </p>
-                <button
-                  className="primary full"
-                  onClick={() => share([modal.event], "Encontro da comunidade")}
-                >
-                  <Share2 size={18} />
-                  Compartilhar no WhatsApp
-                </button>
-                {canWrite && (
+                  {modal.event.contact && <p>Contato: {modal.event.contact}</p>}
+                  {modal.event.notes && (
+                    <p className="notes">{modal.event.notes}</p>
+                  )}
+                  <p className="audit">
+                    Registrado por <b>{modal.event.creator_name}</b>
+                    <br />
+                    {new Date(modal.event.created_at).toLocaleString("pt-BR")}
+                  </p>
                   <button
-                    className="secondary full"
+                    className="primary full"
                     onClick={() =>
-                      setModal({ kind: "event", event: modal.event })
+                      share([modal.event], "Encontro da comunidade")
                     }
                   >
-                    Editar reserva
+                    <Share2 size={18} />
+                    Compartilhar no WhatsApp
                   </button>
-                )}
-              </>
-            )}
-            {modal.kind === "password" && (
-              <>
-                <h2>Definir nova senha</h2>
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault();
-                    setBusy(true);
-                    const password = new FormData(e.currentTarget).get(
-                      "password",
-                    );
-                    const { error } = await db.auth.updateUser({ password });
-                    setBusy(false);
-                    if (error) notify(error.message);
-                    else {
+                  {canWrite && (
+                    <button
+                      className="secondary full"
+                      onClick={() =>
+                        setModal({ kind: "event", event: modal.event })
+                      }
+                    >
+                      Editar reserva
+                    </button>
+                  )}
+                </>
+              )}
+              {modal.kind === "password" && (
+                <>
+                  <h2>Definir nova senha</h2>
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      setBusy(true);
+                      const password = new FormData(e.currentTarget).get(
+                        "password",
+                      );
+                      const { error } = await db.auth.updateUser({ password });
+                      setBusy(false);
+                      if (error) notify(error.message);
+                      else {
+                        setModal(null);
+                        notify("Senha atualizada.");
+                      }
+                    }}
+                  >
+                    <label>
+                      Nova senha
+                      <input
+                        name="password"
+                        type="password"
+                        minLength={8}
+                        required
+                        autoComplete="new-password"
+                      />
+                    </label>
+                    <button className="primary full" disabled={busy}>
+                      Atualizar senha
+                    </button>
+                  </form>
+                </>
+              )}
+              {modal.kind === "account" && (
+                <>
+                  <h2>Olá, {name}.</h2>
+                  <p>{session?.user?.email}</p>
+                  <button
+                    className="secondary full"
+                    onClick={async () => {
+                      await db.auth.signOut();
                       setModal(null);
-                      notify("Senha atualizada.");
-                    }
-                  }}
-                >
-                  <label>
-                    Nova senha
-                    <input
-                      name="password"
-                      type="password"
-                      minLength={8}
-                      required
-                      autoComplete="new-password"
-                    />
-                  </label>
-                  <button className="primary full" disabled={busy}>
-                    Atualizar senha
+                      setTab("Início");
+                    }}
+                  >
+                    <LogOut size={18} /> Sair da conta
                   </button>
-                </form>
-              </>
-            )}
-            {modal.kind === "account" && (
-              <>
-                <h2>Olá, {name}.</h2>
-                <p>{session?.user?.email}</p>
-                <button
-                  className="secondary full"
-                  onClick={async () => {
-                    await db.auth.signOut();
-                    setModal(null);
-                    setTab("Início");
-                  }}
-                >
-                  <LogOut size={18} /> Sair da conta
-                </button>
-              </>
-            )}
-          </section>
-        </div>
-      )}
+                </>
+              )}
+            </section>
+          </div>
+        )}
       {toast && (
         <div className="toast" role="status">
           {toast}

@@ -1,5 +1,7 @@
 # Perfis atuais — 25/11/2026
 
+**Correção de escopo:** Dizimista não tem reservas nem acesso à agenda de reservas. Navegação: Início, Meu dízimo e Avisos. Removidos o botão Reservar da barra inferior, cards de encontros e celebrações derivados de reservas, acesso a detalhes e leitura de `events` pelo cliente. A migração `007_staff_reservations.sql`, depois de 001–006, restringe a leitura de reservas ao Administrador e Agente de Pastoral; ainda não aplicada ao Supabase real. Comunicados publicados no Mural continuam disponíveis. Esta correção substitui as referências à agenda para Dizimista abaixo.
+
 ## Revisão da experiência Dizimista
 
 Início próprio em `DizimistaHome.jsx`: saudação curta, contribuição em destaque, celebração do fim de semana, reflexão, até três próximos encontros e acesso aos avisos. A página não reutiliza estatísticas administrativas nem calendário lateral do portal. Navegação inferior: Início, Agenda e Meu dízimo; este último abre diretamente Contribuir, com histórico e abas de mural/notificações. Os botões de nova reserva ficam fora da experiência Dizimista. Agenda abre na visão Dia ao usar a navegação inferior. A troca de tela volta ao topo.

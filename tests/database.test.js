@@ -604,6 +604,42 @@ test("PostgreSQL: migrações, RLS, confirmação e fila de notificações", asy
         );
       },
     );
+    await t.test(
+      "Dizimista não lê nem cria reservas; equipe mantém acesso",
+      async () => {
+        await db.exec(
+          readFileSync(
+            new URL(
+              "../supabase/migrations/007_staff_reservations.sql",
+              import.meta.url,
+            ),
+            "utf8",
+          ),
+        );
+        assert.equal(
+          (await as("econ", () => db.query("select * from events"))).rows
+            .length,
+          0,
+        );
+        assert.ok(
+          (await as("admin", () => db.query("select id from events"))).rows
+            .length > 0,
+        );
+        assert.ok(
+          (await as("pastoral", () => db.query("select id from events"))).rows
+            .length > 0,
+        );
+        await assert.rejects(
+          () =>
+            as("econ", () =>
+              db.query(
+                "insert into events(title,type,date,start_time,end_time) values('Teste','Missa','2028-02-01','09:00','10:00')",
+              ),
+            ),
+          /row-level security/,
+        );
+      },
+    );
   } finally {
     await db.close();
   }
