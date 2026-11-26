@@ -1,14 +1,14 @@
 export const notificationCategories = {
   aniversario: {
     label: "Aniversariantes",
-    roles: ["admin", "pastoral_dizimo"],
+    roles: ["admin", "agente_pastoral"],
     personal: true,
     title: "Um dia especial para você",
     body: "A comunidade Nossa Senhora Aparecida deseja um aniversário abençoado! Que sua vida seja sempre cercada de fé e amor.",
   },
   recebimento_dizimo: {
     label: "Recebimento de dízimo",
-    roles: ["admin", "conselho_economico"],
+    roles: ["admin"],
     personal: true,
     receipt: true,
     title: "Sua contribuição foi conferida",
@@ -16,7 +16,7 @@ export const notificationCategories = {
   },
   recebimento_oferta: {
     label: "Recebimento de oferta",
-    roles: ["admin", "conselho_economico"],
+    roles: ["admin"],
     personal: true,
     receipt: true,
     title: "Sua oferta foi conferida",
@@ -24,31 +24,31 @@ export const notificationCategories = {
   },
   lembrete_dizimo: {
     label: "Lembrete de dízimo",
-    roles: ["admin", "pastoral_dizimo"],
+    roles: ["admin", "agente_pastoral"],
     title: "Um gesto de fé e partilha",
     body: "Sua generosidade ajuda a cuidar da nossa capela. Se desejar contribuir com o dízimo, acesse o app. Paz e bem!",
   },
   lembrete_oferta: {
     label: "Lembrete de oferta",
-    roles: ["admin", "pastoral_dizimo"],
+    roles: ["admin", "agente_pastoral"],
     title: "Juntos cuidamos da comunidade",
     body: "Cada oferta é um gesto de amor pela nossa comunidade. Conheça no app as formas de contribuir.",
   },
   promocao: {
     label: "Promoções e eventos",
-    roles: ["admin", "conselho_administrativo"],
+    roles: ["admin", "agente_pastoral"],
     title: "Vem aí um encontro especial",
     body: "Temos novidades para a comunidade! Acesse o app e saiba como participar.",
   },
   comunicado: {
     label: "Comunicados",
-    roles: ["admin", "conselho_administrativo"],
+    roles: ["admin", "agente_pastoral"],
     title: "Um aviso da nossa comunidade",
     body: "Há um novo comunicado da capela. Acesse o app para saber mais.",
   },
   celebracao: {
     label: "Missas e celebrações",
-    roles: ["admin", "conselho_administrativo"],
+    roles: ["admin", "agente_pastoral"],
     title: "Vamos celebrar juntos",
     body: "Confira no app os próximos horários de missas e celebrações da nossa capela.",
   },

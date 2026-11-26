@@ -1,5 +1,6 @@
 import ResponsiveForm from "./ResponsiveForm";
 import Notifications from "./Notifications";
+import ParishionerImport from "./ParishionerImport";
 import React, { useState, useEffect } from "react";
 import {
   Heart,
@@ -53,9 +54,9 @@ export default function Community({
     setNotificationIntent(intent);
     setSection("Notificações");
   }
-  const finance = demo || canManageContributions(profile?.role),
-    staff = demo || canOrganize(profile?.role),
-    confirmPayments = demo || canConfirm(profile?.role),
+  const finance = canManageContributions(profile?.role),
+    staff = canOrganize(profile?.role),
+    confirmPayments = canConfirm(profile?.role),
     admin = profile?.role === "admin";
   async function load() {
     if (!db) return;
@@ -224,9 +225,7 @@ export default function Community({
   }
   async function confirm(p) {
     if (!confirmPayments)
-      return notify(
-        "A conferência é exclusiva do Conselho Econômico e do Administrador.",
-      );
+      return notify("A conferência é exclusiva do Administrador.");
     if (!guard()) return;
     const { error } = await db
       .from("contributions")
@@ -607,8 +606,8 @@ export default function Community({
               <Upload size={18} /> Registrar pagamento e comprovante
             </button>
             <small className="muted">
-              O envio do comprovante aguarda a conferência do Conselho
-              Econômico. O QR Code não confirma o pagamento automaticamente.
+              O envio do comprovante aguarda a conferência do Administrador. O
+              QR Code não confirma o pagamento automaticamente.
             </small>
           </section>
           <section className="white-card">
@@ -639,14 +638,22 @@ export default function Community({
             <div>
               <h2>Dizimistas da comunidade</h2>
               <p>
-                Cadastro disponível à Pastoral do Dízimo, ao Conselho Econômico
-                e ao Administrador.
+                Cadastro disponível ao Agente de Pastoral e ao Administrador.
               </p>
             </div>
             <button className="primary" onClick={() => setForm("person")}>
               <Plus size={17} /> Cadastrar
             </button>
           </div>
+          {finance && (
+            <ParishionerImport
+              db={db}
+              demo={demo}
+              online={online}
+              notify={notify}
+              onImported={load}
+            />
+          )}
           {people.map((p) => (
             <div className="member" key={p.id}>
               <span className="avatar">{p.name[0]}</span>

@@ -6,6 +6,8 @@ App online da Capela Nossa Senhora Aparecida, Bairro União, Palotina. Desenvolv
 
 ## Estado desta entrega
 
+**Perfis atuais (25/11/2026): Administrador, Agente de Pastoral e Dizimista.** Esta organização substitui as descrições anteriores de acesso por conselhos. [Matriz de acesso e migração 006](docs/perfis-acesso.md). A demonstração tem seletor de perfil; Dizimista ativa a visão de app imediatamente, inclusive no navegador. Alterações locais ainda não publicadas nem aplicadas ao Supabase real.
+
 Interface implementada e publicável no GitHub Pages. Sem configuração Supabase, abre uma **demonstração explicitamente identificada**, com dados ilustrativos e gravação desabilitada. Nenhum dado de reserva ou contribuição é salvo no navegador.
 
 O backend deste app está em `supabase/`, separado dos outros projetos. A migração se destina a **um novo projeto Supabase dedicado**. Não a execute sobre um banco de outro sistema: ela cria tabelas no schema `public`, gatilho de cadastro e políticas de acesso.
@@ -31,6 +33,12 @@ O backend deste app está em `supabase/`, separado dos outros projetos. A migra�
 - Cópia HTML única de layout, gerada automaticamente a cada build, e atalho local para a versão online.
 
 ### Ativar operação real
+
+### Atualização local — 25/11/2026
+
+Responsividade reforçada para celular/PWA e importação de dizimistas com prévia CSV, validação, permissões e histórico por lote. Aplicar também a migração `005_parishioner_import.sql` após 001–004. O banco real ainda não foi alterado. [Procedimento e pendências da importação](docs/importacao-dizimistas.md). A leitura direta de XLSX/PDF no navegador fica para evolução; o relatório PDF recebido já tem conversão local preliminar, pendente de revisão. Revisão visual em dispositivos pendente por indisponibilidade do host de navegador.
+
+### Configuração do backend
 
 1. Criar um projeto Supabase dedicado, sem contratar plano pago por este procedimento.
 2. Executar as migrações `001_community.sql`, `002_profiles.sql`, `003_owner.sql` e `004_notifications.sql`, nessa ordem, no SQL Editor desse projeto. Executar somente as ainda não aplicadas. A segunda mantém antigos usuários da Secretaria no Conselho Administrativo; antigos perfis de Tesouraria e Consulta precisam de nova aprovação para revisar as novas permissões.

@@ -62,7 +62,7 @@ export default function Notifications({
   const requestRef = useRef(null);
   const [linkPerson, setLinkPerson] = useState(""),
     [linkAccount, setLinkAccount] = useState("");
-  const role = demo ? "admin" : profile?.role,
+  const role = profile?.role,
     admin = role === "admin",
     allowed = allowedCategories(role);
   const [tab, setTab] = useState(
@@ -114,12 +114,12 @@ export default function Notifications({
         {
           id: "demo-maria",
           name: "Maria da Conceição",
-          role: "pastoral_dizimo",
+          role: "agente_pastoral",
         },
         {
           id: "demo-jose",
           name: "José Antônio",
-          role: "conselho_administrativo",
+          role: "dizimista",
         },
       ]);
       return;

@@ -28,6 +28,7 @@ import { dateKey, parseDay, fee, period, conflicts, shareText } from "./domain";
 import "./style.css";
 import "./identity.css";
 import "./experience.css";
+import "./responsive.css";
 import Community from "./community";
 import { roles, roleKeys, roleLabel, canOrganize } from "./roles";
 import { owner, loginEmail } from "./owner";
@@ -163,6 +164,11 @@ function App() {
     [busy, setBusy] = useState(false),
     [members, setMembers] = useState([]),
     [loading, setLoading] = useState(configured);
+  const [previewRole, setPreviewRole] = useState("admin");
+  const effectiveRole = !configured ? previewRole : profile?.role;
+  const effectiveProfile = !configured
+    ? { role: previewRole, approved: true }
+    : profile;
   const demo = !configured,
     canWrite = !demo && canOrganize(profile?.role) && profile?.approved,
     admin = profile?.role === "admin" && profile?.approved;
@@ -426,7 +432,7 @@ function App() {
         ["Comunidade", Heart],
         ["Pessoas", Users],
       ]
-        .filter(([t]) => t !== "Pessoas" || admin || demo)
+        .filter(([t]) => t !== "Pessoas" || effectiveRole === "admin")
         .map(([t, I]) => (
           <button
             key={t}
@@ -467,7 +473,12 @@ function App() {
     </button>
   );
   return (
-    <div className="app">
+    <div
+      className={
+        "app " +
+        (effectiveRole === "dizimista" ? "dizimista-app" : "staff-portal")
+      }
+    >
       <aside className="sidebar">
         <a
           className="brand"
@@ -530,13 +541,36 @@ function App() {
               <span>
                 {demo ? owner.name : name}
                 <small>
-                  {demo ? "Administrador · prévia" : roleLabel(profile?.role)}
+                  {roleLabel(effectiveRole)}
+                  {demo ? " · prévia" : ""}
                 </small>
               </span>
             </button>
           </div>
         </header>
         <main>
+          {demo && (
+            <label className="preview-profile">
+              Visualizar como
+              <select
+                value={previewRole}
+                onChange={(e) => {
+                  setPreviewRole(e.target.value);
+                  setTab("Início");
+                  setModal(null);
+                }}
+              >
+                {roleKeys.map((role) => (
+                  <option key={role} value={role}>
+                    {roleLabel(role)}
+                  </option>
+                ))}
+              </select>
+              <small>
+                Prévia visual; não altera permissões nem grava dados.
+              </small>
+            </label>
+          )}
           {!online && (
             <div className="notice error">
               <WifiOff size={18} />
@@ -996,7 +1030,8 @@ function App() {
               {tab === "Comunidade" && (
                 <Community
                   db={db}
-                  profile={profile}
+                  key={effectiveRole}
+                  profile={effectiveProfile}
                   session={session}
                   demo={demo}
                   notify={notify}
@@ -1004,7 +1039,7 @@ function App() {
                   Select={CustomSelect}
                 />
               )}
-              {tab === "Pessoas" && (
+              {tab === "Pessoas" && effectiveRole === "admin" && (
                 <>
                   <section className="page-heading">
                     <div>
@@ -1025,10 +1060,10 @@ function App() {
                       <p>
                         Compartilhe o link do app. A pessoa se cadastra e você
                         aprova o acesso aqui. O Administrador gerencia acessos;
-                        o Conselho Administrativo organiza a agenda e os
-                        comunicados; o Conselho Econômico confere os pagamentos;
-                        a Pastoral do Dízimo cuida dos dizimistas e registra as
-                        contribuições.
+                        confirma recebimentos e tem acesso completo. O Agente de
+                        Pastoral organiza agenda, comunicados e cadastros e
+                        acompanha contribuições. O Dizimista usa a visão de app
+                        e acompanha somente suas próprias contribuições.
                       </p>
                     </div>
                   </div>

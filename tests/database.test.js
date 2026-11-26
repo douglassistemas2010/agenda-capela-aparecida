@@ -30,6 +30,7 @@ test("PostgreSQL: migrações, RLS, confirmação e fila de notificações", asy
       "002_profiles.sql",
       "003_owner.sql",
       "004_notifications.sql",
+      "005_parishioner_import.sql",
     ])
       await db.exec(
         readFileSync(
@@ -432,6 +433,175 @@ test("PostgreSQL: migrações, RLS, confirmação e fila de notificações", asy
             /exclusion constraint/,
           );
         });
+      },
+    );
+    await t.test(
+      "Importação protege permissões, duplicados e atomicidade",
+      async () => {
+        const records = [
+          {
+            name: "Pessoa Importada",
+            external_code: "teste-001",
+            phone: "44999999999",
+            birthday: "1980-01-02",
+            address: "Rua de teste",
+            city: "Palotina",
+            legacy_last_contribution: "2026-10-01",
+          },
+        ];
+        await assert.rejects(
+          () =>
+            as("administrativo", () =>
+              db.query("select import_parishioners($1,$2)", [
+                "teste.csv",
+                JSON.stringify(records),
+              ]),
+            ),
+          /Acesso negado/,
+        );
+        const first = await as("pastoral", () =>
+          db.query("select import_parishioners($1,$2) as result", [
+            "teste.csv",
+            JSON.stringify(records),
+          ]),
+        );
+        assert.equal(first.rows[0].result.inserted, 1);
+        const saved = (
+          await db.query(
+            "select address,city,legacy_last_contribution::text as last_date from parishioners where external_code='teste-001'",
+          )
+        ).rows[0];
+        assert.deepEqual(saved, {
+          address: "Rua de teste",
+          city: "Palotina",
+          last_date: "2026-10-01",
+        });
+        const repeated = await as("pastoral", () =>
+          db.query("select import_parishioners($1,$2) as result", [
+            "teste.csv",
+            JSON.stringify(records),
+          ]),
+        );
+        assert.equal(repeated.rows[0].result.skipped, 1);
+        await assert.rejects(
+          () =>
+            as("econ", () =>
+              db.query("select import_parishioners($1,$2)", [
+                "erro.csv",
+                JSON.stringify([{ name: "Pessoa Revertida" }, { name: "X" }]),
+              ]),
+            ),
+          /Dados inválidos/,
+        );
+        assert.equal(
+          (
+            await db.query(
+              "select id from parishioners where name='Pessoa Revertida'",
+            )
+          ).rows.length,
+          0,
+        );
+        assert.equal(
+          (
+            await as("administrativo", () =>
+              db.query("select * from parishioner_imports"),
+            )
+          ).rows.length,
+          0,
+        );
+        assert.equal(
+          (
+            await db.query(
+              "select id from parishioner_imports where source_name='erro.csv'",
+            )
+          ).rows.length,
+          0,
+        );
+      },
+    );
+    await t.test(
+      "Três perfis: equipe web e dizimista com dados restritos",
+      async () => {
+        await db.exec(
+          readFileSync(
+            new URL(
+              "../supabase/migrations/006_access_channels.sql",
+              import.meta.url,
+            ),
+            "utf8",
+          ),
+        );
+        assert.equal(
+          (
+            await db.query("select role from profiles where id=$1", [
+              ids.pastoral,
+            ])
+          ).rows[0].role,
+          "dizimista",
+        );
+        assert.equal(
+          (
+            await db.query("select approved from profiles where id=$1", [
+              ids.pastoral,
+            ])
+          ).rows[0].approved,
+          false,
+        );
+        await db.query(
+          "update profiles set role='agente_pastoral',approved=true where id=$1",
+          [ids.pastoral],
+        );
+        await db.query(
+          "update profiles set role='dizimista',approved=true where id=$1",
+          [ids.econ],
+        );
+        const access = async (key) =>
+          as(key, () =>
+            db.query(
+              "select is_member() as member,has_role(array['admin','pastoral_dizimo']) as cadastros,has_role(array['admin','conselho_administrativo']) as agenda,has_role(array['admin','conselho_economico']) as confirma",
+            ),
+          );
+        assert.deepEqual((await access("pastoral")).rows[0], {
+          member: true,
+          cadastros: true,
+          agenda: true,
+          confirma: false,
+        });
+        assert.deepEqual((await access("econ")).rows[0], {
+          member: true,
+          cadastros: false,
+          agenda: false,
+          confirma: false,
+        });
+        assert.equal(
+          (await as("econ", () => db.query("select * from parishioners"))).rows
+            .length,
+          0,
+        );
+        assert.equal(
+          (
+            await as("econ", () =>
+              db.query("select * from contributions where user_id<>auth.uid()"),
+            )
+          ).rows.length,
+          0,
+        );
+        await assert.rejects(
+          () =>
+            as("econ", () =>
+              db.query(
+                "select import_parishioners('teste.csv','[{\"name\":\"Pessoa Teste\"}]')",
+              ),
+            ),
+          /Acesso negado/,
+        );
+        await assert.rejects(
+          () =>
+            as("pastoral", () =>
+              db.query("select manage_member($1,$2,true)", [ids.econ, "admin"]),
+            ),
+          /Acesso negado/,
+        );
       },
     );
   } finally {

@@ -1,0 +1,227 @@
+/* Regras compartilhadas por navegador, PWA e futura embalagem do app. */
+.preview-profile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.preview-profile select {
+  min-height: 44px;
+  font: inherit;
+  padding: 10px;
+  border: 1px solid #c9d8ef;
+  border-radius: 12px;
+  background: white;
+}
+.preview-profile small {
+  flex-basis: 100%;
+}
+.dizimista-app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  background: #f7f9fd;
+}
+.dizimista-app .sidebar {
+  display: none;
+}
+.dizimista-app .shell {
+  margin-left: 0;
+  width: 100%;
+  min-width: 0;
+}
+.dizimista-app main {
+  padding: 20px 16px calc(110px + env(safe-area-inset-bottom));
+}
+.dizimista-app header {
+  padding: 14px 16px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.dizimista-app .header-section,
+.dizimista-app .connection {
+  display: none;
+}
+.dizimista-app .home-spotlight,
+.dizimista-app .community-grid,
+.dizimista-app .dashboard-grid,
+.dizimista-app .stats {
+  grid-template-columns: minmax(0, 1fr);
+}
+.dizimista-app .section-heading,
+.dizimista-app .page-heading {
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.dizimista-app .bottom-nav {
+  display: flex;
+  position: fixed;
+  width: calc(100% - 24px);
+  max-width: 456px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  justify-content: space-around;
+  align-items: center;
+  height: 72px;
+  padding: 10px;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 4px 24px #23457420;
+  z-index: 30;
+}
+.dizimista-app .bottom-nav > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: #284a77;
+}
+.dizimista-app .bottom-nav > button.active {
+  color: #a5823f;
+}
+.dizimista-app input,
+.dizimista-app textarea,
+.dizimista-app select {
+  font-size: 1rem;
+}
+.dizimista-app .calendar-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  min-width: 0;
+}
+main,
+.content,
+.community-grid > *,
+.notification-workspace > *,
+.section-heading > *,
+.member > div {
+  min-width: 0;
+}
+img,
+video,
+canvas {
+  max-width: 100%;
+}
+input,
+textarea,
+select {
+  max-width: 100%;
+}
+button,
+a,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
+:focus-visible {
+  outline: 3px solid #a5823f;
+  outline-offset: 3px;
+}
+.member,
+.import-panel {
+  overflow-wrap: anywhere;
+}
+.import-panel {
+  margin: 20px 0;
+}
+.import-panel > p {
+  margin: 12px 0;
+  line-height: 1.65;
+}
+.import-panel label {
+  display: grid;
+  gap: 10px;
+}
+.import-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.import-preview article {
+  border: 1px solid #d7e0ee;
+  border-radius: 12px;
+  padding: 14px;
+  min-width: 0;
+}
+.import-preview p {
+  margin: 8px 0;
+}
+@media (pointer: coarse) {
+  button,
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  .custom-select > button {
+    min-height: 44px;
+  }
+}
+@media (max-width: 700px) {
+  input,
+  textarea,
+  select,
+  .search input {
+    font-size: 1rem !important;
+  }
+  .section-heading {
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  .section-heading > div {
+    flex: 1 1 200px;
+  }
+  .member {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .member > div {
+    flex: 1 1 160px;
+  }
+  .member .tag {
+    margin-left: auto;
+  }
+  .community-tabs {
+    max-width: 100%;
+    overscroll-behavior-x: contain;
+  }
+  .modal-backdrop {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+  .modal {
+    width: 100%;
+    min-width: 0;
+  }
+  .import-panel {
+    padding: 18px;
+  }
+  .import-panel > button {
+    width: 100%;
+    white-space: normal;
+  }
+}
+@media (max-width: 380px) {
+  .category-choices,
+  .stats {
+    grid-template-columns: 1fr;
+  }
+  .filter-row,
+  .composer-actions,
+  .form-step-actions {
+    flex-wrap: wrap;
+  }
+  .filter-row > * {
+    min-width: 0;
+  }
+  .modal {
+    padding: 22px 16px;
+  }
+}

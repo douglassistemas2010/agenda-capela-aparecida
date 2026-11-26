@@ -8,15 +8,9 @@ import {
 } from "../src/notification-domain.js";
 test("Disparos respeitam as responsabilidades dos perfis", () => {
   assert.equal(allowedCategories("admin").length, 8);
-  assert.deepEqual(allowedCategories("conselho_economico"), [
-    "recebimento_dizimo",
-    "recebimento_oferta",
-  ]);
-  assert.equal(canNotify("pastoral_dizimo", "aniversario"), true);
-  assert.equal(
-    canNotify("conselho_administrativo", "recebimento_dizimo"),
-    false,
-  );
+  assert.deepEqual(allowedCategories("dizimista"), []);
+  assert.equal(canNotify("agente_pastoral", "aniversario"), true);
+  assert.equal(canNotify("agente_pastoral", "recebimento_dizimo"), false);
   assert.equal(canNotify("consulta", "comunicado"), false);
 });
 test("Recebimentos exigem pagamento e aniversários exigem destinatário", () => {
